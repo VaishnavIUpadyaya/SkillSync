@@ -6,15 +6,15 @@
 :root {
   --navy: #0f1117;
   --navy2: #181c27;
-  --navy3: #1e2335;
-  --border: #2a2f45;
-  --accent: #6c63ff;
-  --accent2: #8b85ff;
+  --navy3: #22273a;
+  --border: #344c5b;
+  --accent: #c7fd8a;
+  --accent2: #89d771;
   --success: #22d3a5;
   --danger: #ff5e6c;
   --text: #e8eaf0;
-  --text2: #8b92a9;
-  --text3: #555d7a;
+  --text2: #b2d99b;
+  --text3: #687952;
   --card: #161b2e;
   --white: #ffffff;
 }

@@ -12,6 +12,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/requests', require('./routes/requests'));
 app.use('/api/ratings', require('./routes/ratings'));
+app.use('/api/endorsements', require('./routes/endorsements'))
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');

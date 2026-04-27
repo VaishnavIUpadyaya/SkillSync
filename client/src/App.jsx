@@ -8,7 +8,8 @@ import Profile from './pages/Profile'
 import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
 import Matches from './pages/Matches'
-
+import PublicProfile from './pages/PublicProfile'
+import Analytics from './pages/Analytics'
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="flex justify-center mt-20 text-gray-500">Loading...</div>
@@ -29,6 +30,8 @@ export default function App() {
           <Route path="/projects" element={<PrivateRoute><Projects /></PrivateRoute>} />
           <Route path="/projects/:id" element={<PrivateRoute><ProjectDetail /></PrivateRoute>} />
           <Route path="/projects/:id/matches" element={<PrivateRoute><Matches /></PrivateRoute>} />
+          <Route path="/users/:id" element={<PrivateRoute><PublicProfile /></PrivateRoute>} />
+          <Route path="/projects/:id/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -59,7 +59,7 @@ export default function Login() {
               onBlur={e => e.target.style.borderColor = 'var(--border)'} required />
           </div>
           <button type="submit" disabled={loading} style={{
-            background: loading ? 'var(--border)' : 'var(--accent)', color: 'white',
+            background: loading ? 'var(--border)' : 'var(--accent2)', color: 'white',
             border: 'none', borderRadius: '10px', padding: '13px',
             fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer',
             fontFamily: 'Syne, sans-serif', transition: 'all 0.2s', marginTop: '4px',

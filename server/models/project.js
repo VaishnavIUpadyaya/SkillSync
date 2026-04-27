@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const ProjectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
@@ -7,8 +8,11 @@ const ProjectSchema = new mongoose.Schema({
   teamSize: { type: Number, default: 4 },
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: { type: String, default: 'open' },
+  tags: [{ type: String }],
+  deadline: { type: Date, default: null },
+  views: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
-});
+})
 ProjectSchema.index({ status: 1 })
 ProjectSchema.index({ owner: 1 })
-module.exports = mongoose.model('Project', ProjectSchema);
+module.exports = mongoose.models.Project || mongoose.model('Project', ProjectSchema);

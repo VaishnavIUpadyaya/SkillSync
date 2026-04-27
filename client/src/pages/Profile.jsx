@@ -102,7 +102,7 @@ export default function Profile() {
               {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
             </select>
             <button onClick={addSkill} style={{
-              background: 'var(--accent)', color: 'white', border: 'none',
+              background: 'var(--accent2)', color: 'white', border: 'none',
               borderRadius: '10px', padding: '0 18px', fontWeight: '600',
               cursor: 'pointer', fontSize: '14px', fontFamily: 'Syne, sans-serif', whiteSpace: 'nowrap'
             }}>Add</button>
@@ -110,7 +110,7 @@ export default function Profile() {
         </div>
 
         <button onClick={handleSave} style={{
-          background: saved ? 'rgba(34,211,165,0.15)' : 'var(--accent)',
+          background: saved ? 'rgba(34,211,165,0.15)' : 'var(--accent2)',
           color: saved ? 'var(--success)' : 'white',
           border: saved ? '1px solid rgba(34,211,165,0.3)' : 'none',
           borderRadius: '10px', padding: '13px', fontSize: '15px',

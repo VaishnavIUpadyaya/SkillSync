@@ -2,6 +2,14 @@ const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Project = mongoose.model('Project')
 
+function normalizeSkill(name) {
+  return name.toLowerCase()
+    .replace(/\./g, '')
+    .replace(/\s+/g, '')
+    .replace(/-/g, '')
+    .trim()
+}
+
 function cosineSimilarity(vecA, vecB) {
   const dot = vecA.reduce((sum, a, i) => sum + a * (vecB[i] || 0), 0)
   const magA = Math.sqrt(vecA.reduce((s, a) => s + a * a, 0))
@@ -12,26 +20,24 @@ function cosineSimilarity(vecA, vecB) {
 
 function buildSkillVector(skills, allSkillNames) {
   return allSkillNames.map(name => {
-    const found = skills.find(s => s.name.toLowerCase() === name.toLowerCase())
+    const found = skills.find(s => normalizeSkill(s.name) === name)
     return found ? found.proficiency : 0
   })
 }
 
 async function matchUsersToProject(projectId) {
-  // always fetch fresh from DB so members/owner are up to date
   const project = await Project.findById(projectId)
   if (!project) return []
 
   const allUsers = await User.find({ available: true })
 
   const allSkillNames = [...new Set([
-    ...project.requiredSkills.map(s => s.name.toLowerCase()),
-    ...allUsers.flatMap(u => u.skills.map(s => s.name.toLowerCase()))
+    ...project.requiredSkills.map(s => normalizeSkill(s.name)),
+    ...allUsers.flatMap(u => u.skills.map(s => normalizeSkill(s.name)))
   ])]
 
   const projectVec = buildSkillVector(project.requiredSkills, allSkillNames)
 
-  // build exclusion list — owner + all current members as plain strings
   const excludeIds = new Set([
     project.owner.toString(),
     ...project.members.map(m => m.toString())

@@ -9,25 +9,35 @@ export default function Dashboard() {
   const { user } = useAuth()
   const [myProjects, setMyProjects] = useState([])
   const [requests, setRequests] = useState([])
+  const [invites, setInvites] = useState([])
+const [bookmarks, setBookmarks] = useState([])
   const navigate = useNavigate()
 
   useEffect(() => {
     api.get('/projects').then(r => setMyProjects(r.data.filter(p => p.owner._id === user?._id)))
     api.get('/requests/mine').then(r => setRequests(r.data))
   }, [user])
+ useEffect(() => {
+  api.get('/projects').then(r => setMyProjects(r.data.filter(p => p.owner._id === user?._id)))
+  api.get('/requests/mine').then(r => setRequests(r.data))
+  api.get('/requests/invites').then(r => setInvites(r.data))
+  api.get('/users/bookmarks/all').then(r => setBookmarks(r.data))
+}, [user])
 
-  const handleRequest = async (id, status) => {
-    await api.put(`/requests/${id}`, { status })
-    setRequests(requests.filter(r => r._id !== id))
-  }
-
+const handleRequest = async (id, status) => {
+  await api.put(`/requests/${id}`, { status })
+  setRequests(requests.filter(r => r._id !== id))
+}
   const statBox = (label, value, color) => (
     <div style={{ background: 'var(--navy3)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px 24px', flex: 1 }}>
       <div style={{ fontSize: '28px', fontWeight: '800', fontFamily: 'Syne, sans-serif', color }}>{value}</div>
       <div style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>{label}</div>
     </div>
   )
-
+const handleInvite = async (id, status) => {
+  await api.put(`/requests/${id}`, { status })
+  setInvites(invites.filter(i => i._id !== id))
+}
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
       <div style={{ marginBottom: '32px' }}>
@@ -38,9 +48,9 @@ export default function Dashboard() {
       </div>
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
-        {statBox('My Projects', myProjects.length, 'var(--accent2)')}
-        {statBox('Pending Requests', requests.length, 'var(--success)')}
-        {statBox('Rating', user?.rating > 0 ? `${user.rating}/5` : '—', 'var(--text)')}
+        {statBox('My Projects', myProjects.length, 'var(--text)')}
+        {statBox('Pending Requests', requests.length, 'var(--danger)')}
+        {statBox('Rating', user?.rating > 0 ? `${user.rating}/5` : '—', 'var(--success)')}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -48,7 +58,7 @@ export default function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: '700' }}>My Projects</h2>
             <button onClick={() => navigate('/projects')} style={{
-              background: 'var(--accent)', color: 'white', border: 'none',
+              background: 'var(--accent2)', color: 'white', border: 'none',
               borderRadius: '8px', padding: '6px 14px', fontSize: '12px',
               fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
             }}>+ New</button>
@@ -76,7 +86,7 @@ export default function Dashboard() {
         <Card>
           <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
             Join Requests
-            {requests.length > 0 && <span style={{ marginLeft: '8px', background: 'var(--accent)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '20px' }}>{requests.length}</span>}
+            {requests.length > 0 && <span style={{ marginLeft: '8px', background: 'var(--accent2)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '20px' }}>{requests.length}</span>}
           </h2>
           {requests.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text3)', fontSize: '14px' }}>
@@ -85,7 +95,7 @@ export default function Dashboard() {
           ) : requests.map(r => (
             <div key={r._id} style={{ padding: '14px', borderRadius: '10px', marginBottom: '10px', background: 'var(--navy3)', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', fontFamily: 'Syne, sans-serif', flexShrink: 0 }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', fontFamily: 'Syne, sans-serif', flexShrink: 0 }}>
                   {r.sender.name[0].toUpperCase()}
                 </div>
                 <div>
@@ -111,6 +121,64 @@ export default function Dashboard() {
             </div>
           ))}
         </Card>
+        {invites.length > 0 && (
+  <Card style={{ marginTop: '24px' }}>
+    <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
+      My Invites
+      <span style={{ marginLeft: '8px', background: 'var(--accent)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '20px' }}>{invites.length}</span>
+    </h2>
+    {invites.map(inv => (
+      <div key={inv._id} style={{ padding: '14px', borderRadius: '10px', marginBottom: '10px', background: 'var(--navy3)', border: '1px solid var(--border)' }}>
+        <p style={{ fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+          You're invited to <span style={{ color: 'var(--accent2)' }}>{inv.project.title}</span>
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '12px' }}>{inv.project.description}</p>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => handleInvite(inv._id, 'accepted')} style={{
+            flex: 1, background: 'rgba(34,211,165,0.1)', color: 'var(--success)',
+            border: '1px solid rgba(34,211,165,0.3)', borderRadius: '8px',
+            padding: '7px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+          }}>Accept</button>
+          <button onClick={() => handleInvite(inv._id, 'rejected')} style={{
+            flex: 1, background: 'rgba(255,94,108,0.1)', color: 'var(--danger)',
+            border: '1px solid rgba(255,94,108,0.3)', borderRadius: '8px',
+            padding: '7px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+          }}>Decline</button>
+        </div>
+      </div>
+    ))}
+  </Card>
+)}
+{bookmarks.length > 0 && (
+  <Card style={{ marginTop: '24px', gridColumn: '1 / -1' }}>
+    <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
+      Saved Projects
+      <span style={{ marginLeft: '8px', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: '11px', padding: '2px 8px', borderRadius: '20px', border: '1px solid rgba(245,158,11,0.3)' }}>{bookmarks.length}</span>
+    </h2>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+      {bookmarks.map(p => (
+        <div key={p._id} onClick={() => navigate(`/projects/${p._id}`)} style={{
+          padding: '12px', borderRadius: '10px', background: 'var(--navy3)',
+          border: '1px solid var(--border)', cursor: 'pointer', transition: 'border-color 0.2s'
+        }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#f59e0b'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text)' }}>{p.title}</span>
+            <span style={{ fontSize: '14px', color: '#f59e0b' }}>★</span>
+          </div>
+          <p style={{ fontSize: '12px', color: 'var(--text3)' }}>by {p.owner?.name}</p>
+          <span style={{
+            display: 'inline-block', marginTop: '6px', fontSize: '11px', padding: '2px 8px', borderRadius: '20px',
+            background: p.status === 'open' ? 'rgba(34,211,165,0.1)' : 'rgba(108,99,255,0.1)',
+            color: p.status === 'open' ? 'var(--success)' : 'var(--accent2)',
+            border: `1px solid ${p.status === 'open' ? 'rgba(34,211,165,0.2)' : 'rgba(108,99,255,0.2)'}`
+          }}>{p.status}</span>
+        </div>
+      ))}
+    </div>
+  </Card>
+)}
       </div>
     </div>
   )
