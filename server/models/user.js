@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, unique: true, required: true },
   password: { type: String, required: true },
   skills: [{ name: String, proficiency: Number }],
   role: { type: String, default: '' },
@@ -10,9 +10,8 @@ const UserSchema = new mongoose.Schema({
   rating: { type: Number, default: 0 },
   ratingCount: { type: Number, default: 0 },
   bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],
+  availableDates: [{ type: String }],
   createdAt: { type: Date, default: Date.now }
-});
-
-UserSchema.index({ available: 1 });
-
-module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
+})
+UserSchema.index({ available: 1 })
+module.exports = mongoose.model('User', UserSchema)

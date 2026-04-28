@@ -3,6 +3,8 @@ const router = express.Router();
 const JoinRequest = require('../models/joinRequest');
 const Project = require('../models/project');
 const auth = require('../middleware/auth');
+const sendMail = require('../utils/mailer')
+const User = require('../models/user')
 router.post('/', auth, async (req, res) => {
   try {
     const { projectId } = req.body;
@@ -37,9 +39,9 @@ router.put('/:id', auth, async (req, res) => {
     const request = await JoinRequest.findById(req.params.id).populate('project')
     if (!request) return res.status(404).json({ msg: 'Request not found' })
 
-    const isOwnerAction = (request.type === 'request' || !request.type) && 
+    const isOwnerAction = (request.type === 'request' || !request.type) &&
       request.project.owner.toString() === req.user.id
-    const isInvitedAction = request.type === 'invite' && 
+    const isInvitedAction = request.type === 'invite' &&
       request.invitee?.toString() === req.user.id
 
     if (!isOwnerAction && !isInvitedAction)
@@ -53,6 +55,50 @@ router.put('/:id', auth, async (req, res) => {
       await Project.findByIdAndUpdate(request.project._id, {
         $addToSet: { members: userToAdd }
       })
+
+      const acceptedUser = await User.findById(userToAdd)
+      const projectTitle = request.project.title
+
+      if (request.type === 'invite') {
+        const owner = await User.findById(request.project.owner)
+        await sendMail(
+          owner.email,
+          `${acceptedUser.name} accepted your invite — ${projectTitle}`,
+          `<div style="font-family:sans-serif;padding:24px;max-width:500px">
+            <h2 style="color:#6c63ff">SkillSync</h2>
+            <p>Hi ${owner.name},</p>
+            <p><strong>${acceptedUser.name}</strong> has accepted your invite to join <strong>${projectTitle}</strong>.</p>
+            <p style="color:#888;font-size:13px">Log in to SkillSync to see your updated team.</p>
+          </div>`
+        )
+      } else {
+        await sendMail(
+          acceptedUser.email,
+          `Your request was accepted — ${projectTitle}`,
+          `<div style="font-family:sans-serif;padding:24px;max-width:500px">
+            <h2 style="color:#6c63ff">SkillSync</h2>
+            <p>Hi ${acceptedUser.name},</p>
+            <p>Your request to join <strong>${projectTitle}</strong> has been <strong style="color:#22d3a5">accepted</strong>!</p>
+            <p>You are now a member of the team.</p>
+            <p style="color:#888;font-size:13px">Log in to SkillSync to connect with your teammates.</p>
+          </div>`
+        )
+      }
+    }
+
+    if (status === 'rejected' && request.type !== 'invite') {
+      const rejectedUser = await User.findById(request.sender)
+      await sendMail(
+        rejectedUser.email,
+        `Update on your request — ${request.project.title}`,
+        `<div style="font-family:sans-serif;padding:24px;max-width:500px">
+          <h2 style="color:#6c63ff">SkillSync</h2>
+          <p>Hi ${rejectedUser.name},</p>
+          <p>Your request to join <strong>${request.project.title}</strong> was not accepted this time.</p>
+          <p>Keep exploring other projects on SkillSync that match your skills.</p>
+          <p style="color:#888;font-size:13px">Don't give up — the right team is out there!</p>
+        </div>`
+      )
     }
 
     res.json(request)
@@ -73,17 +119,32 @@ router.post('/invite', auth, async (req, res) => {
 
     const invite = await JoinRequest.create({
       project: projectId,
-      sender: req.user.id,  
-      invitee: userId,       
+      sender: req.user.id,
+      invitee: userId,
       type: 'invite',
       status: 'pending'
     })
+
+    const invitedUser = await User.findById(userId)
+    const owner = await User.findById(req.user.id)
+
+    await sendMail(
+      invitedUser.email,
+      `You've been invited to join ${project.title}`,
+      `<div style="font-family:sans-serif;padding:24px;max-width:500px">
+        <h2 style="color:#6c63ff">SkillSync</h2>
+        <p>Hi ${invitedUser.name},</p>
+        <p><strong>${owner.name}</strong> has invited you to join their project <strong>${project.title}</strong>.</p>
+        <p>Log in to SkillSync to accept or decline the invite.</p>
+        <p style="color:#888;font-size:13px">This invite will remain open until you respond.</p>
+      </div>`
+    )
+
     res.json(invite)
   } catch (err) {
     res.status(500).json({ msg: err.message })
   }
 })
-
 router.get('/invites', auth, async (req, res) => {
   try {
     const invites = await JoinRequest.find({

@@ -51,6 +51,19 @@ router.get('/bookmarks/all', auth, async (req, res) => {
     res.status(500).json({ msg: err.message })
   }
 })
+router.put('/availability', auth, async (req, res) => {
+  try {
+    const { availableDates } = req.body
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { availableDates },
+      { new: true }
+    ).select('-password')
+    res.json(user)
+  } catch (err) {
+    res.status(500).json({ msg: err.message })
+  }
+})
 router.get('/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');

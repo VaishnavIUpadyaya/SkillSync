@@ -59,7 +59,7 @@ export default function Login() {
               onBlur={e => e.target.style.borderColor = 'var(--border)'} required />
           </div>
           <button type="submit" disabled={loading} style={{
-            background: loading ? 'var(--border)' : 'var(--accent2)', color: 'white',
+            background: loading ? 'var(--border)' : 'var(--accent3)', color: 'white',
             border: 'none', borderRadius: '10px', padding: '13px',
             fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer',
             fontFamily: 'Syne, sans-serif', transition: 'all 0.2s', marginTop: '4px',
@@ -68,7 +68,7 @@ export default function Login() {
           </button>
           <p style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text2)' }}>
             No account?{' '}
-            <Link to="/register" style={{ color: 'var(--accent2)', textDecoration: 'none', fontWeight: '500' }}>Create one</Link>
+            <Link to="/register" style={{ color: 'var(--accent3)', textDecoration: 'none', fontWeight: '500' }}>Create one</Link>
           </p>
         </form>
       </div>

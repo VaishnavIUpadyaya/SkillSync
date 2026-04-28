@@ -327,7 +327,7 @@ export default function ProjectDetail() {
           {isOwner && (
             <>
               <button onClick={() => navigate(`/projects/${id}/matches`)} style={{
-                background: 'var(--accent2)', color: 'white', border: 'none',
+                background: 'var(--accent3)', color: 'white', border: 'none',
                 borderRadius: '10px', padding: '11px 20px', fontSize: '14px',
                 fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
               }}>View Matches</button>
@@ -345,16 +345,12 @@ export default function ProjectDetail() {
           )}
           {!isOwner && !isMember && !requested && (
             <button onClick={sendRequest} style={{
-              background: 'var(--accent)', color: 'white', border: 'none',
+              background: 'var(--accent3)', color: 'white', border: 'none',
               borderRadius: '10px', padding: '11px 20px', fontSize: '14px',
               fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
             }}>Request to Join</button>
           )}
-          {(requested || isMember) && !isOwner && (
-            <span style={{ color: 'var(--success)', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center' }}>
-              {isMember ? 'You are a member' : 'Request sent!'}
-            </span>
-          )}
+          
         </div>
       </Card>
     </div>

@@ -65,7 +65,7 @@ export default function Matches() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
                 <div style={{ position: 'relative' }}>
                   <div style={{
-                    width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent)',
+                    width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent2)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontWeight: '800', fontSize: '16px', fontFamily: 'Syne, sans-serif'
                   }}>{user.name[0].toUpperCase()}</div>
@@ -99,7 +99,7 @@ export default function Matches() {
                   onClick={() => handleInvite(user._id)}
                   disabled={invited[user._id] || loading[user._id]}
                   style={{
-                    background: invited[user._id] ? 'rgba(34,211,165,0.1)' : 'var(--accent)',
+                    background: invited[user._id] ? 'rgba(34,211,165,0.1)' : 'var(--accent3)',
                     color: invited[user._id] ? 'var(--success)' : 'white',
                     border: invited[user._id] ? '1px solid rgba(34,211,165,0.3)' : 'none',
                     borderRadius: '10px', padding: '10px 18px',

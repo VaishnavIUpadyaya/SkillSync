@@ -79,7 +79,7 @@ export default function Projects() {
           </p>
         </div>
         <button onClick={() => setShowForm(!showForm)} style={{
-          background: showForm ? 'transparent' : 'var(--accent2)', color: showForm ? 'var(--text2)' : 'white',
+          background: showForm ? 'transparent' : 'var(--accent3)', color: showForm ? 'var(--text2)' : 'white',
           border: showForm ? '1px solid var(--border)' : 'none',
           borderRadius: '10px', padding: '10px 20px', fontSize: '14px',
           fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
@@ -196,7 +196,7 @@ export default function Projects() {
               </div>
             </div>
             <button type="submit" style={{
-              background: 'var(--accent)', color: 'white', border: 'none',
+              background: 'var(--accent3)', color: 'white', border: 'none',
               borderRadius: '10px', padding: '13px', fontSize: '15px',
               fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
             }}>Create Project</button>

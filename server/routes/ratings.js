@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const Rating = require('../models/Rating')
-const User = require('../models/User')
+const Rating = require('../models/rating')
+const User = require('../models/user')
 const Project = require('../models/project')
 const auth = require('../middleware/auth')
 
