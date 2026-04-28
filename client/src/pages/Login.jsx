@@ -15,7 +15,7 @@ export default function Login() {
     setLoading(true)
     try {
       const res = await api.post('/auth/login', form)
-      login(res.data.token, res.data.user)
+      await login(res.data.token, res.data.user)
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.msg || 'Login failed')
@@ -53,7 +53,7 @@ export default function Login() {
           </div>
           <div>
             <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Password</label>
-            <input style={inputStyle} type="password" placeholder="••••••••"
+            <input style={inputStyle} type="password" placeholder="password"
               value={form.password} onChange={e => setForm({...form, password: e.target.value})}
               onFocus={e => e.target.style.borderColor = 'var(--accent)'}
               onBlur={e => e.target.style.borderColor = 'var(--border)'} required />

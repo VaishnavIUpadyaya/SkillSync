@@ -44,7 +44,7 @@ export default function Register() {
         )}
 
         <form onSubmit={handleSubmit} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {[['Name', 'text', 'Full Name', 'name'], ['Email', 'email', 'you@example.com', 'email'], ['Password', 'password', '••••••••', 'password']].map(([label, type, ph, key]) => (
+          {[['Name', 'text', 'Full Name', 'name'], ['Email', 'email', 'you@example.com', 'email'], ['Password', 'password', 'password', 'password']].map(([label, type, ph, key]) => (
             <div key={key}>
               <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>{label}</label>
               <input style={inputStyle} type={type} placeholder={ph}

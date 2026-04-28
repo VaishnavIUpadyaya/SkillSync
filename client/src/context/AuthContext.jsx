@@ -19,9 +19,15 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = (token, userData) => {
+  const login = async (token, userData) => {
     localStorage.setItem('token', token)
-    setUser(userData)
+    // Fetch full user profile to ensure all fields (like rating) are up-to-date
+    try {
+      const res = await api.get('/users/me')
+      setUser(res.data)
+    } catch (err) {
+      setUser(userData) // fallback to provided userData if fetch fails
+    }
   }
 
   const logout = () => {

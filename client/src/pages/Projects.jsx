@@ -34,6 +34,10 @@ export default function Projects() {
     setNewSkill({ name: '', proficiency: 3 })
   }
 
+  const removeSkill = (i) => {
+    setForm({ ...form, requiredSkills: form.requiredSkills.filter((_, idx) => idx !== i) })
+  }
+
   const toggleTag = (tag) => {
     setForm(prev => ({
       ...prev,
@@ -70,7 +74,7 @@ export default function Projects() {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>Projects</h1>
@@ -88,7 +92,7 @@ export default function Projects() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '10px', marginBottom: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '0.625rem', marginBottom: '1rem', minWidth: 0 }}>
         <div style={{ position: 'relative' }}>
           <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)' }}
             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -126,7 +130,7 @@ export default function Projects() {
       </div>
 
       {showForm && (
-        <Card style={{ marginBottom: '28px' }}>
+        <Card style={{ marginBottom: '1.75rem', minWidth: 0 }}>
           <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>Create New Project</h2>
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px' }}>
@@ -177,7 +181,14 @@ export default function Projects() {
             <div>
               <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Required Skills</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minHeight: '28px' }}>
-                {form.requiredSkills.map((s, i) => <SkillTag key={i} name={s.name} proficiency={s.proficiency} />)}
+                {form.requiredSkills.map((s, i) => (
+                  <span key={i} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(108,99,255,0.12)', border: '1px solid rgba(108,99,255,0.25)', color: 'var(--accent2)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', marginRight: '4px', marginBottom: '4px' }}>
+                    {s.name} <span style={{ color: 'var(--text3)', marginLeft: '4px' }}>{s.proficiency}/5</span>
+                    <button type="button" onClick={() => removeSkill(i)} style={{
+                      background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0, marginLeft: '6px'
+                    }}>×</button>
+                  </span>
+                ))}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input style={{ ...inputStyle, flex: 1 }} placeholder="Skill name"
@@ -217,7 +228,7 @@ export default function Projects() {
           )}
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '16px' }}>
+        <div style={{ display: 'grid', gap: '1rem', minWidth: 0 }}>
           {filtered.map(p => {
             const daysLeft = p.deadline ? Math.ceil((new Date(p.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null
             return (

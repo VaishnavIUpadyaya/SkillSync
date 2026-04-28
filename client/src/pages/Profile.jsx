@@ -42,6 +42,11 @@ export default function Profile() {
   const removeSkill = (i) => setForm({ ...form, skills: form.skills.filter((_, idx) => idx !== i) })
 
   const handleSave = async () => {
+    if (!form.role) {
+      setSaved(false)
+      alert('Please select a role before saving')
+      return
+    }
     try {
       const res = await api.put('/users/me', form)
       setUser(res.data)
@@ -94,11 +99,11 @@ export default function Profile() {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ width: '100%', maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
       <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', marginBottom: '24px' }}>My Profile</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <Card style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', minWidth: 0 }}>
+        <Card style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minWidth: 0 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Full Name</label>
@@ -109,11 +114,21 @@ export default function Profile() {
             </div>
             <div>
               <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Role</label>
-              <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.role}
-                onChange={e => setForm({...form, role: e.target.value})}>
-                <option value="">Select role</option>
-                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <select
+  style={{ ...inputStyle, cursor: 'pointer' }}
+  value={form.role}
+  required
+  onChange={(e) =>
+    setForm({ ...form, role: e.target.value })
+  }
+>
+  <option value="">Select role</option>
+  {ROLES.map((r) => (
+    <option key={r} value={r}>
+      {r}
+    </option>
+  ))}
+</select>
             </div>
           </div>
 
@@ -151,19 +166,22 @@ export default function Profile() {
                 </span>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input style={{ ...inputStyle, flex: 1 }} placeholder="e.g. React, Python..."
                 value={newSkill.name} onChange={e => setNewSkill({...newSkill, name: e.target.value})}
                 onKeyDown={e => e.key === 'Enter' && addSkill()}
                 onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border)'} />
-              <select style={{ ...inputStyle, width: '80px' }} value={newSkill.proficiency}
-                onChange={e => setNewSkill({...newSkill, proficiency: Number(e.target.value)})}>
-                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Proficiency</label>
+                <select style={{ ...inputStyle, width: '80px', marginBottom: 0 }} value={newSkill.proficiency}
+                  onChange={e => setNewSkill({...newSkill, proficiency: Number(e.target.value)})}>
+                  {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
+                </select>
+              </div>
               <button onClick={addSkill} style={{
                 background: 'var(--accent3)', color: 'white', border: 'none',
-                borderRadius: '10px', padding: '0 18px', fontWeight: '600',
+                borderRadius: '10px', padding: '0 17px', fontWeight: '600',
                 cursor: 'pointer', fontSize: '14px', fontFamily: 'Syne, sans-serif', whiteSpace: 'nowrap'
               }}>Add</button>
             </div>
@@ -181,7 +199,7 @@ export default function Profile() {
           </button>
         </Card>
 
-        <Card>
+        <Card style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Availability</p>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

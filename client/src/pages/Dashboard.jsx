@@ -30,7 +30,7 @@ const handleRequest = async (id, status) => {
 }
   const statBox = (label, value, color) => (
     <div style={{ background: 'var(--navy3)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px 24px', flex: 1 }}>
-      <div style={{ fontSize: '28px', fontWeight: '800', fontFamily: 'Syne, sans-serif', color }}>{value}</div>
+      <div style={{ fontSize: '28px', fontWeight: '720', fontFamily: 'Syne, sans-serif', color }}>{value}</div>
       <div style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>{label}</div>
     </div>
   )
@@ -39,7 +39,7 @@ const handleInvite = async (id, status) => {
   setInvites(invites.filter(i => i._id !== id))
 }
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
           Hey, {user?.name?.split(' ')[0]} 👋
@@ -47,14 +47,14 @@ const handleInvite = async (id, status) => {
         <p style={{ color: 'var(--text2)', marginTop: '4px', fontSize: '15px' }}>Here's what's happening with your projects</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', minWidth: 0 }}>
         {statBox('My Projects', myProjects.length, 'var(--text)')}
         {statBox('Pending Requests', requests.length, 'var(--danger)')}
         {statBox('Rating', user?.rating > 0 ? `${user.rating}/5` : '—', 'var(--success)')}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <Card>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', minWidth: 0 }}>
+        <Card style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: '700' }}>My Projects</h2>
             <button onClick={() => navigate('/projects')} style={{
@@ -83,7 +83,7 @@ const handleInvite = async (id, status) => {
           ))}
         </Card>
 
-        <Card>
+        <Card style={{ minWidth: 0 }}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
             Join Requests
             {requests.length > 0 && <span style={{ marginLeft: '8px', background: 'var(--accent2)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '20px' }}>{requests.length}</span>}
@@ -121,8 +121,8 @@ const handleInvite = async (id, status) => {
             </div>
           ))}
         </Card>
-        {invites.length > 0 && (
-  <Card style={{ marginTop: '24px' }}>
+          {invites.length > 0 && (
+        <Card style={{ marginTop: '1.5rem', minWidth: 0 }}>
     <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
       My Invites
       <span style={{ marginLeft: '8px', background: 'var(--accent)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '20px' }}>{invites.length}</span>
@@ -150,12 +150,12 @@ const handleInvite = async (id, status) => {
   </Card>
 )}
 {bookmarks.length > 0 && (
-  <Card style={{ marginTop: '24px', gridColumn: '1 / -1' }}>
+  <Card style={{ marginTop: '1.5rem', gridColumn: '1 / -1', minWidth: 0 }}>
     <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
       Saved Projects
       <span style={{ marginLeft: '8px', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: '11px', padding: '2px 8px', borderRadius: '20px', border: '1px solid rgba(245,158,11,0.3)' }}>{bookmarks.length}</span>
     </h2>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.625rem', minWidth: 0 }}>
       {bookmarks.map(p => (
         <div key={p._id} onClick={() => navigate(`/projects/${p._id}`)} style={{
           padding: '12px', borderRadius: '10px', background: 'var(--navy3)',
