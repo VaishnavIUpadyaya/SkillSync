@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://skill-sync-red.vercel.app'],
+  credentials: true
+}))
 app.use(express.json());
 const rateLimit = require('express-rate-limit')
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }))
