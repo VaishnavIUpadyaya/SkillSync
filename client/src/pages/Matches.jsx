@@ -41,10 +41,16 @@ export default function Matches() {
   }
 
   const handleInvite = async (userId) => {
-  setLoading(prev => ({ ...prev, [userId]: true }))
+  setLoading(prev => ({
+    ...prev,
+    [userId]: true
+  }))
 
   try {
-    await api.post('/requests/invite', { projectId: id, userId })
+    await api.post('/requests/invite', {
+      projectId: id,
+      userId
+    })
 
     setInvited(prev => ({
       ...prev,
@@ -52,7 +58,17 @@ export default function Matches() {
     }))
 
   } catch (err) {
-    alert(err.response?.data?.msg || 'Error sending invite')
+    const msg = err.response?.data?.msg || 'Error sending invite'
+
+    if (msg.includes('Already invited')) {
+      setInvited(prev => ({
+        ...prev,
+        [userId]: true
+      }))
+    } else {
+      alert(msg)
+    }
+
   } finally {
     setLoading(prev => ({
       ...prev,
