@@ -27,7 +27,8 @@ export default function Matches() {
     } catch (err) {
       alert(err.response?.data?.msg || 'Error sending invite')
     } finally {
-      setLoading(prev => ({ ...prev, [userId]: false }))
+      // Use a functional update to ensure the latest state is used
+      setLoading(current => ({ ...current, [userId]: false }))
     }
   }
 
