@@ -73,6 +73,14 @@ export default function Projects() {
     return colors[tag] || '#6c63ff'
   }
 
+  const proficiencyLevels = [
+    { level: 1, label: 'B', color: '#ef4444' },
+    { level: 2, label: 'F', color: '#f97316' },
+    { level: 3, label: 'I', color: '#f59e0b' },
+    { level: 4, label: 'A', color: '#22c55e' },
+    { level: 5, label: 'E', color: '#6c63ff' },
+  ]
+
   return (
     <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
@@ -196,10 +204,20 @@ export default function Projects() {
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'} />
-                <select style={{ ...inputStyle, width: '80px' }} value={newSkill.proficiency}
-                  onChange={e => setNewSkill({...newSkill, proficiency: Number(e.target.value)})}>
-                  {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-                </select>
+                <div style={{ display: 'flex', gap: '4px' }}>
+  {proficiencyLevels.map(({ level, label, color }) => (
+    <button key={level} type="button"
+      onClick={() => setNewSkill({...newSkill, proficiency: level})}
+      title={label}
+      style={{
+        width: '28px', height: '36px', borderRadius: '6px', border: 'none',
+        fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+        transition: 'all 0.15s',
+        background: newSkill.proficiency >= level ? color : 'var(--border)',
+        color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
+      }}>{label}</button>
+  ))}
+</div>
                 <button type="button" onClick={addSkill} style={{
                   background: 'var(--navy3)', color: 'var(--text)', border: '1px solid var(--border)',
                   borderRadius: '10px', padding: '0 16px', cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap'
@@ -275,7 +293,9 @@ export default function Projects() {
                           background: filterSkill && normalize(s.name).includes(normalize(filterSkill)) ? 'rgba(108,99,255,0.25)' : 'rgba(108,99,255,0.12)',
                           border: `1px solid ${filterSkill && normalize(s.name).includes(normalize(filterSkill)) ? 'rgba(108,99,255,0.6)' : 'rgba(108,99,255,0.25)'}`,
                           color: 'var(--accent2)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500'
-                        }}>{s.name} <span style={{ color: 'var(--text3)', fontSize: '11px' }}>{s.proficiency}/5</span></span>
+                        }}>{s.name} <span style={{ color: 'var(--text3)', fontSize: '11px' }}>
+  {s.proficiency === 1 ? 'Beginner' : s.proficiency === 2 ? 'Familiar' : s.proficiency === 3 ? 'Intermediate' : s.proficiency === 4 ? 'Advanced' : 'Expert'}
+</span></span>
                       ))}
                     </div>
                   </div>

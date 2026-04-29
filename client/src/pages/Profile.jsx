@@ -12,6 +12,14 @@ const inputStyle = {
   transition: 'border-color 0.2s', fontFamily: 'DM Sans, sans-serif',
 }
 
+const proficiencyLevels = [
+  { level: 1, label: 'B', color: '#ef4444' },
+  { level: 2, label: 'F', color: '#f97316' },
+  { level: 3, label: 'I', color: '#f59e0b' },
+  { level: 4, label: 'A', color: '#22c55e' },
+  { level: 5, label: 'E', color: '#6c63ff' },
+]
+
 export default function Profile() {
   const { user, setUser } = useAuth()
   const [form, setForm] = useState({ name: '', role: '', available: true, skills: [] })
@@ -167,17 +175,37 @@ export default function Profile() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input style={{ ...inputStyle, flex: 1 }} placeholder="e.g. React, Python..."
+              <input style={{ ...inputStyle, flex: 1 }} placeholder="Type a skill and press Enter"
                 value={newSkill.name} onChange={e => setNewSkill({...newSkill, name: e.target.value})}
                 onKeyDown={e => e.key === 'Enter' && addSkill()}
                 onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border)'} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Proficiency</label>
-                <select style={{ ...inputStyle, width: '80px', marginBottom: 0 }} value={newSkill.proficiency}
-                  onChange={e => setNewSkill({...newSkill, proficiency: Number(e.target.value)})}>
-                  {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-                </select>
+                <label style={{ fontSize: '11px', color: 'var(--accent2)' }}>Proficiency</label>
+                <div style={{ display: 'flex', gap: '4px' }}>
+  {proficiencyLevels.map(({ level, label, color }) => (
+    <button
+      key={level}
+      type="button"
+      onClick={() => setNewSkill({ ...newSkill, proficiency: level })}
+      title={label}
+      style={{
+        width: '32px',
+        height: '36px',
+        borderRadius: '6px',
+        border: 'none',
+        fontSize: '11px',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+        background: newSkill.proficiency >= level ? color : 'var(--border)',
+        color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
+      }}
+    >
+      {label}
+    </button>
+  ))}
+</div>
               </div>
               <button onClick={addSkill} style={{
                 background: 'var(--accent3)', color: 'white', border: 'none',
