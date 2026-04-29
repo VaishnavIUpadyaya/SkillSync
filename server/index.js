@@ -9,7 +9,10 @@ app.use(cors({
 }))
 app.use(express.json());
 const rateLimit = require('express-rate-limit')
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }))
+// Apply a higher limit for login and register endpoints only
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: 'Too many login attempts, please try again later.' })
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', authLimiter)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/projects', require('./routes/projects'));

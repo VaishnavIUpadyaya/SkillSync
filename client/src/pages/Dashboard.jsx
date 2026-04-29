@@ -25,8 +25,17 @@ const [bookmarks, setBookmarks] = useState([])
 }, [user])
 
 const handleRequest = async (id, status) => {
-  await api.put(`/requests/${id}`, { status })
-  setRequests(requests.filter(r => r._id !== id))
+  try {
+    await api.put(`/requests/${id}`, { status })
+    setRequests(requests.filter(r => r._id !== id))
+  } catch (err) {
+    if (err.response?.status === 401) {
+      alert('Session expired. Please log in again.')
+      // Optionally, redirect to login page here
+    } else {
+      alert(err.response?.data?.msg || 'Error processing request')
+    }
+  }
 }
   const statBox = (label, value, color) => (
     <div style={{ background: 'var(--navy3)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px 24px', flex: 1 }}>
@@ -35,8 +44,17 @@ const handleRequest = async (id, status) => {
     </div>
   )
 const handleInvite = async (id, status) => {
-  await api.put(`/requests/${id}`, { status })
-  setInvites(invites.filter(i => i._id !== id))
+  try {
+    await api.put(`/requests/${id}`, { status })
+    setInvites(invites.filter(i => i._id !== id))
+  } catch (err) {
+    if (err.response?.status === 401) {
+      alert('Session expired. Please log in again.')
+      // Optionally, redirect to login page here
+    } else {
+      alert(err.response?.data?.msg || 'Error processing invite')
+    }
+  }
 }
   return (
     <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
