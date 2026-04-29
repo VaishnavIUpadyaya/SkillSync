@@ -41,41 +41,35 @@ export default function Matches() {
   }
 
   const handleInvite = async (userId) => {
-  setLoading(prev => ({
-    ...prev,
-    [userId]: true
-  }))
+    // Force update to ensure re-render
+    setLoading(prev => ({ ...prev, [userId]: true }))
+    
+    // Force a re-render before API call
+    await new Promise(resolve => setTimeout(resolve, 0))
 
-  try {
-    await api.post('/requests/invite', {
-      projectId: id,
-      userId
-    })
+    try {
+      await api.post('/requests/invite', {
+        projectId: id,
+        userId
+      })
 
-    setInvited(prev => ({
-      ...prev,
-      [userId]: true
-    }))
+      // Update invited state
+      setInvited(prev => ({ ...prev, [userId]: true }))
 
-  } catch (err) {
-    const msg = err.response?.data?.msg || 'Error sending invite'
+    } catch (err) {
+      const msg = err.response?.data?.msg || 'Error sending invite'
 
-    if (msg.includes('Already invited')) {
-      setInvited(prev => ({
-        ...prev,
-        [userId]: true
-      }))
-    } else {
-      alert(msg)
+      if (msg.includes('Already invited')) {
+        setInvited(prev => ({ ...prev, [userId]: true }))
+      } else {
+        alert(msg)
+      }
+
+    } finally {
+      // Clear loading state - create new object to force re-render
+      setLoading({})
     }
-
-  } finally {
-    setLoading(prev => ({
-      ...prev,
-      [userId]: false
-    }))
   }
-}
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
