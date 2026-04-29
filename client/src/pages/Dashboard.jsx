@@ -13,17 +13,32 @@ export default function Dashboard() {
 const [bookmarks, setBookmarks] = useState([])
   const navigate = useNavigate()
 
-  useEffect(() => {
-    api.get('/projects').then(r => setMyProjects(r.data.filter(p => p.owner._id === user?._id)))
-    api.get('/requests/mine').then(r => setRequests(r.data))
-  }, [user])
  useEffect(() => {
-  api.get('/projects').then(r => setMyProjects(r.data.filter(p => p.owner._id === user?._id)))
-  api.get('/requests/mine').then(r => setRequests(r.data))
-  api.get('/requests/invites').then(r => setInvites(r.data))
-  api.get('/users/bookmarks/all').then(r => setBookmarks(r.data))
-}, [user])
+  if (!user) return
 
+  api.get('/projects')
+    .then(r =>
+      setMyProjects(
+        r.data.filter(p => p.owner._id === user?._id)
+      )
+    )
+
+  setTimeout(() => {
+    api.get('/requests/mine')
+      .then(r => setRequests(r.data))
+  }, 200)
+
+  setTimeout(() => {
+    api.get('/requests/invites')
+      .then(r => setInvites(r.data))
+  }, 400)
+
+  setTimeout(() => {
+    api.get('/users/bookmarks/all')
+      .then(r => setBookmarks(r.data))
+  }, 600)
+
+}, [user])
 const handleRequest = async (id, status) => {
   try {
     await api.put(`/requests/${id}`, { status })

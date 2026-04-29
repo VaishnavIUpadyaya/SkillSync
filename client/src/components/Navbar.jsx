@@ -17,7 +17,11 @@ export default function Navbar() {
         .catch(() => {})
     }
     fetchCount()
-    const interval = setInterval(fetchCount, 30000)
+    const interval = setInterval(() => {
+  if (document.visibilityState === "visible") {
+    fetchCount()
+  }
+}, 120000)
     return () => clearInterval(interval)
   }, [user])
 

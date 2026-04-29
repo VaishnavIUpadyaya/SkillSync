@@ -42,6 +42,13 @@ export default function Login() {
             {error}
           </div>
         )}
+        <div style={{
+  background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
+  borderRadius: '10px', padding: '10px 14px', marginBottom: '16px',
+  fontSize: '12px', color: '#f59e0b', textAlign: 'center'
+}}>
+  First load may take 30-60 seconds as the server wakes up
+</div>
 
         <form onSubmit={handleSubmit} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
