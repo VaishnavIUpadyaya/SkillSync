@@ -11,8 +11,29 @@ export default function Matches() {
   const [loading, setLoading] = useState({})
   const navigate = useNavigate()
 
-  useEffect(() => { api.get(`/projects/${id}/matches`).then(r => setMatches(r.data)) }, [id])
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const matchesRes = await api.get(`/projects/${id}/matches`)
+      setMatches(matchesRes.data)
 
+      const invitedRes = await api.get(`/requests/invited/${id}`)
+
+      const invitedMap = {}
+
+      invitedRes.data.forEach(userId => {
+        invitedMap[userId] = true
+      })
+
+      setInvited(invitedMap)
+
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  fetchData()
+}, [id])
   const scoreColor = (score) => {
     if (score >= 0.8) return 'var(--success)'
     if (score >= 0.5) return 'var(--accent2)'

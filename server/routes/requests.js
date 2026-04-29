@@ -202,4 +202,17 @@ router.get('/notifications/count', auth, async (req, res) => {
     res.status(500).json({ msg: err.message })
   }
 })
+router.get('/invited/:projectId', auth, async (req, res) => {
+  try {
+    const invites = await JoinRequest.find({
+      project: req.params.projectId,
+      type: 'invite',
+      status: 'pending'
+    }).select('invitee')
+
+    res.json(invites.map(i => i.invitee.toString()))
+  } catch (err) {
+    res.status(500).json({ msg: err.message })
+  }
+})
 module.exports = router;
