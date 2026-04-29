@@ -114,7 +114,13 @@ router.post('/invite', auth, async (req, res) => {
     if (project.owner.toString() !== req.user.id)
       return res.status(403).json({ msg: 'Only owner can invite' })
 
-    const existing = await JoinRequest.findOne({ project: projectId, sender: req.user.id, invitee: userId })
+    const existing = await JoinRequest.findOne({ 
+      project: projectId, 
+      $or: [
+        { sender: req.user.id, invitee: userId },
+        { invitee: userId, sender: req.user.id }
+      ]
+    })
     if (existing) return res.status(400).json({ msg: 'Already invited or requested' })
 
     const invite = await JoinRequest.create({
@@ -156,6 +162,21 @@ router.get('/invites', auth, async (req, res) => {
       .populate('sender', 'name')
       .sort({ createdAt: -1 })
     res.json(invites)
+  } catch (err) {
+    res.status(500).json({ msg: err.message })
+  }
+})
+// Get invites SENT by current user
+router.get('/invites/sent', auth, async (req, res) => {
+  try {
+    const sentInvites = await JoinRequest.find({
+      sender: req.user.id,
+      type: 'invite'
+    })
+      .populate('project', 'title description status')
+      .populate('invitee', 'name')
+      .sort({ createdAt: -1 })
+    res.json(sentInvites)
   } catch (err) {
     res.status(500).json({ msg: err.message })
   }

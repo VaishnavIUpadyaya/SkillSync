@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [myProjects, setMyProjects] = useState([])
   const [requests, setRequests] = useState([])
   const [invites, setInvites] = useState([])
+  const [sentInvites, setSentInvites] = useState([])
 const [bookmarks, setBookmarks] = useState([])
   const navigate = useNavigate()
 
@@ -32,6 +33,11 @@ const [bookmarks, setBookmarks] = useState([])
     api.get('/requests/invites')
       .then(r => setInvites(r.data))
   }, 400)
+
+  setTimeout(() => {
+    api.get('/requests/invites/sent')
+      .then(r => setSentInvites(r.data))
+  }, 500)
 
   setTimeout(() => {
     api.get('/users/bookmarks/all')
@@ -198,6 +204,34 @@ const handleInvite = async (id, status) => {
             border: '1px solid rgba(255,94,108,0.3)', borderRadius: '8px',
             padding: '7px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
           }}>Decline</button>
+        </div>
+      </div>
+    ))}
+  </Card>
+)}
+{sentInvites.length > 0 && (
+  <Card style={{ marginTop: '1.5rem', minWidth: 0 }}>
+    <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>
+      Invites Sent
+      <span style={{ marginLeft: '8px', background: 'var(--accent2)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '20px' }}>{sentInvites.length}</span>
+    </h2>
+    {sentInvites.map(inv => (
+      <div key={inv._id} style={{ padding: '14px', borderRadius: '10px', marginBottom: '10px', background: 'var(--navy3)', border: '1px solid var(--border)' }}>
+        <p style={{ fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+          Invited <span style={{ color: 'var(--accent2)' }}>{inv.invitee?.name || 'User'}</span> to <span style={{ color: 'var(--accent)' }}>{inv.project?.title}</span>
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '12px' }}>{inv.project?.description}</p>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ 
+            fontSize: '12px', 
+            padding: '4px 10px', 
+            borderRadius: '20px',
+            background: inv.status === 'pending' ? 'rgba(245,158,11,0.1)' : inv.status === 'accepted' ? 'rgba(34,211,165,0.1)' : 'rgba(255,94,108,0.1)',
+            color: inv.status === 'pending' ? '#f59e0b' : inv.status === 'accepted' ? 'var(--success)' : 'var(--danger)',
+            border: `1px solid ${inv.status === 'pending' ? 'rgba(245,158,11,0.3)' : inv.status === 'accepted' ? 'rgba(34,211,165,0.3)' : 'rgba(255,94,108,0.3)'}`
+          }}>
+            {inv.status === 'pending' ? '⏳ Pending' : inv.status === 'accepted' ? '✓ Accepted' : '✕ Declined'}
+          </span>
         </div>
       </div>
     ))}
