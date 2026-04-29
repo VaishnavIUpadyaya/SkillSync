@@ -41,27 +41,25 @@ export default function Matches() {
   }
 
   const handleInvite = async (userId) => {
-    setLoading(prev => ({ ...prev, [userId]: true }))
-    try {
-      await api.post('/requests/invite', { projectId: id, userId })
-      setInvited(prev => ({ ...prev, [userId]: true }))
-    } catch (err) {
-      alert(err.response?.data?.msg || 'Error sending invite')
-    } finally {
-      setLoading(prev => {
-        const updated = { ...prev, [userId]: false };
-        // Fallback: clear all loading if something is stuck
-        Object.keys(updated).forEach(key => {
-          if (typeof updated[key] !== 'boolean') updated[key] = false;
-        });
-        return updated;
-      });
-      // Debug: log state after update
-      setTimeout(() => {
-        console.log('Loading state:', loading, 'Invited state:', invited);
-      }, 0);
-    }
+  setLoading(prev => ({ ...prev, [userId]: true }))
+
+  try {
+    await api.post('/requests/invite', { projectId: id, userId })
+
+    setInvited(prev => ({
+      ...prev,
+      [userId]: true
+    }))
+
+  } catch (err) {
+    alert(err.response?.data?.msg || 'Error sending invite')
+  } finally {
+    setLoading(prev => ({
+      ...prev,
+      [userId]: false
+    }))
   }
+}
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
