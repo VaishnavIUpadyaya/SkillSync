@@ -27,8 +27,18 @@ export default function Matches() {
     } catch (err) {
       alert(err.response?.data?.msg || 'Error sending invite')
     } finally {
-      // Use a functional update to ensure the latest state is used
-      setLoading(current => ({ ...current, [userId]: false }))
+      setLoading(prev => {
+        const updated = { ...prev, [userId]: false };
+        // Fallback: clear all loading if something is stuck
+        Object.keys(updated).forEach(key => {
+          if (typeof updated[key] !== 'boolean') updated[key] = false;
+        });
+        return updated;
+      });
+      // Debug: log state after update
+      setTimeout(() => {
+        console.log('Loading state:', loading, 'Invited state:', invited);
+      }, 0);
     }
   }
 
