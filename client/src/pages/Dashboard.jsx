@@ -42,7 +42,7 @@ const [bookmarks, setBookmarks] = useState([])
 const handleRequest = async (id, status) => {
   try {
     await api.put(`/requests/${id}`, { status })
-    setRequests(requests.filter(r => r._id !== id))
+setRequests(prev => prev.filter(r => r._id !== id))
   } catch (err) {
     if (err.response?.status === 401) {
       alert('Session expired. Please log in again.')
@@ -61,7 +61,7 @@ const handleRequest = async (id, status) => {
 const handleInvite = async (id, status) => {
   try {
     await api.put(`/requests/${id}`, { status })
-    setInvites(invites.filter(i => i._id !== id))
+setInvites(prev => prev.filter(i => i._id !== id))
   } catch (err) {
     if (err.response?.status === 401) {
       alert('Session expired. Please log in again.')
