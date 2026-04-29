@@ -114,15 +114,13 @@ router.post('/invite', auth, async (req, res) => {
     if (project.owner.toString() !== req.user.id)
       return res.status(403).json({ msg: 'Only owner can invite' })
 
-    const existing = await JoinRequest.findOne({ 
-      project: projectId, 
-      $or: [
-        { sender: req.user.id, invitee: userId },
-        { invitee: userId, sender: req.user.id }
-      ]
-    })
-    if (existing) return res.status(400).json({ msg: 'Already invited or requested' })
-
+    const existing = await JoinRequest.findOne({
+  project: projectId,
+  invitee: userId,
+  type: 'invite',
+  status: 'pending'
+})
+   if (existing) return res.status(400).json({ msg: 'Already invited' })
     const invite = await JoinRequest.create({
       project: projectId,
       sender: req.user.id,
