@@ -61,7 +61,7 @@ router.put('/:id', auth, async (req, res) => {
 
       if (request.type === 'invite') {
         const owner = await User.findById(request.project.owner)
-        await sendMail(
+        sendMail(
           owner.email,
           `${acceptedUser.name} accepted your invite — ${projectTitle}`,
           `<div style="font-family:sans-serif;padding:24px;max-width:500px">
@@ -72,7 +72,7 @@ router.put('/:id', auth, async (req, res) => {
           </div>`
         )
       } else {
-        await sendMail(
+        sendMail(
           acceptedUser.email,
           `Your request was accepted — ${projectTitle}`,
           `<div style="font-family:sans-serif;padding:24px;max-width:500px">
@@ -88,7 +88,7 @@ router.put('/:id', auth, async (req, res) => {
 
     if (status === 'rejected' && request.type !== 'invite') {
       const rejectedUser = await User.findById(request.sender)
-      await sendMail(
+      sendMail(
         rejectedUser.email,
         `Update on your request — ${request.project.title}`,
         `<div style="font-family:sans-serif;padding:24px;max-width:500px">
@@ -132,7 +132,7 @@ router.post('/invite', auth, async (req, res) => {
     const invitedUser = await User.findById(userId)
     const owner = await User.findById(req.user.id)
 
-    await sendMail(
+    sendMail(
       invitedUser.email,
       `You've been invited to join ${project.title}`,
       `<div style="font-family:sans-serif;padding:24px;max-width:500px">
