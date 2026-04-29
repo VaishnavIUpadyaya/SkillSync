@@ -40,13 +40,23 @@ const [bookmarks, setBookmarks] = useState([])
 
 }, [user])
 const handleRequest = async (id, status) => {
+  // Optimistic update - remove immediately from UI
+  setRequests(prev => prev.filter(r => r._id !== id))
+  
   try {
     await api.put(`/requests/${id}`, { status })
-setRequests(prev => prev.filter(r => r._id !== id))
+    // Success - already removed from UI above
   } catch (err) {
+    // Revert the optimistic update on error
+    try {
+      const r = await api.get('/requests/mine')
+      setRequests(r.data)
+    } catch {
+      // If re-fetch fails, just show error
+    }
+    
     if (err.response?.status === 401) {
       alert('Session expired. Please log in again.')
-      // Optionally, redirect to login page here
     } else {
       alert(err.response?.data?.msg || 'Error processing request')
     }
@@ -59,13 +69,24 @@ setRequests(prev => prev.filter(r => r._id !== id))
     </div>
   )
 const handleInvite = async (id, status) => {
+  // Optimistic update - remove immediately from UI
+  setInvites(prev => prev.filter(i => i._id !== id))
+  
   try {
     await api.put(`/requests/${id}`, { status })
-setInvites(prev => prev.filter(i => i._id !== id))
+    // Success - already removed from UI above
   } catch (err) {
+    // Revert the optimistic update on error
+    // Re-fetch invites to restore state
+    try {
+      const r = await api.get('/requests/invites')
+      setInvites(r.data)
+    } catch {
+      // If re-fetch fails, just show error
+    }
+    
     if (err.response?.status === 401) {
       alert('Session expired. Please log in again.')
-      // Optionally, redirect to login page here
     } else {
       alert(err.response?.data?.msg || 'Error processing invite')
     }
