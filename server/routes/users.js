@@ -64,14 +64,6 @@ router.put('/availability', auth, async (req, res) => {
     res.status(500).json({ msg: err.message })
   }
 })
-router.get('/:id', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('-password');
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ msg: err.message });
-  }
-});
 router.get('/:id/profile', auth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password')
@@ -92,6 +84,14 @@ router.get('/:id/profile', auth, async (req, res) => {
     res.status(500).json({ msg: err.message })
   }
 })
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+});
 
 
 

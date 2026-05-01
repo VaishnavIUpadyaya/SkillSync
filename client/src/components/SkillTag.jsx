@@ -1,4 +1,4 @@
-export default function SkillTag({ name, proficiency, size = 'md' }) {
+export default function SkillTag({ name, proficiency, verified = false, size = 'md' }) {
   const small = size === 'sm'
 
   const levelLabel = (p) => {
@@ -21,9 +21,9 @@ export default function SkillTag({ name, proficiency, size = 'md' }) {
 
   return (
     <span style={{
-      background: 'rgba(108,99,255,0.12)',
-      border: '1px solid rgba(108,99,255,0.25)',
-      color: 'var(--accent2)',
+      background: verified ? 'rgba(34,211,165,0.08)' : 'rgba(108,99,255,0.12)',
+      border: verified ? '1px solid rgba(34,211,165,0.3)' : '1px solid rgba(108,99,255,0.25)',
+      color: verified ? 'var(--success)' : 'var(--accent2)',
       padding: small ? '2px 8px' : '4px 10px',
       borderRadius: '6px',
       fontSize: small ? '11px' : '12px',
@@ -33,6 +33,7 @@ export default function SkillTag({ name, proficiency, size = 'md' }) {
       gap: '6px',
       whiteSpace: 'nowrap',
     }}>
+      {verified && <span style={{ fontSize: '10px' }}>✓</span>}
       {name}
       {proficiency && (
         <span style={{

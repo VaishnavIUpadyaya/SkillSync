@@ -128,7 +128,7 @@ export default function Matches() {
                     {user.rating > 0 && <span style={{ fontSize: '12px', color: '#f59e0b' }}>★ {user.rating}</span>}
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {user.skills.map((s, i) => <SkillTag key={i} name={s.name} proficiency={s.proficiency} size="sm" />)}
+                    {user.skills.map((s, i) => <SkillTag key={i} name={s.name} proficiency={s.proficiency} verified={s.verified} size="sm" />)}
                   </div>
                 </div>
               </div>

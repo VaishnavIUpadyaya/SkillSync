@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Endorsement = require('../models/Endorsement')
 const auth = require('../middleware/auth')
+const { createActivity } = require('../utils/activityLogger');
 
 router.post('/', auth, async (req, res) => {
   try {
@@ -11,6 +12,16 @@ router.post('/', auth, async (req, res) => {
     const existing = await Endorsement.findOne({ endorser: req.user.id, endorsee: endorseeId, skill })
     if (existing) return res.status(400).json({ msg: 'Already endorsed this skill' })
     const endorsement = await Endorsement.create({ endorser: req.user.id, endorsee: endorseeId, skill })
+    
+    // Log activity
+    const count = await Endorsement.countDocuments({ endorsee: endorseeId, skill })
+    await createActivity({
+      type: 'ENDORSEMENT',
+      user: endorseeId,
+      skill,
+      count
+    })
+
     res.json(endorsement)
   } catch (err) {
     res.status(500).json({ msg: err.message })

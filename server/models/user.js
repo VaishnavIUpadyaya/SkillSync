@@ -4,7 +4,12 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, unique: true, required: true },
   password: { type: String, required: true },
-  skills: [{ name: String, proficiency: Number }],
+skills: [{ 
+  name: String, 
+  proficiency: Number,
+  verified: { type: Boolean, default: false },
+  verifiedAt: { type: Date, default: null }
+}],
   role: { type: String, default: '' },
   available: { type: Boolean, default: true },
   rating: { type: Number, default: 0 },

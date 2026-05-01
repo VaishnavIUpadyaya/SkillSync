@@ -10,6 +10,7 @@ const ProjectSchema = new mongoose.Schema({
   status: { type: String, default: 'open' },
   tags: [{ type: String }],
   deadline: { type: Date, default: null },
+  githubRepo: { type: String, default: '' },
   views: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 })

@@ -21,7 +21,10 @@ function cosineSimilarity(vecA, vecB) {
 function buildSkillVector(skills, allSkillNames) {
   return allSkillNames.map(name => {
     const found = skills.find(s => normalizeSkill(s.name) === name)
-    return found ? found.proficiency : 0
+    if (!found) return 0
+    // verified skills get 20% boost, capped at 5
+    const boost = found.verified ? 1.2 : 1
+    return Math.min(found.proficiency * boost, 5)
   })
 }
 

@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const { matchUsersToProject } = require('../utils/matching');
 const JoinRequest = require('../models/joinRequest')
 const Rating = require('../models/rating')
+const { createActivity } = require('../utils/activityLogger');
 router.get('/', auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1
@@ -22,12 +23,21 @@ router.get('/', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { title, description, requiredSkills, teamSize, deadline, tags } = req.body;
+    const { title, description, requiredSkills, teamSize, deadline, tags, githubRepo } = req.body;
     const project = await Project.create({
       title, description, requiredSkills, teamSize, deadline, tags,
+      githubRepo: githubRepo || '',
       owner: req.user.id,
       members: [req.user.id]
     });
+
+    // Log activity
+    await createActivity({
+      type: 'NEW_PROJECT',
+      user: req.user.id,
+      project: project._id
+    });
+
     res.json(project);
   } catch (err) {
     res.status(500).json({ msg: err.message });
@@ -126,6 +136,16 @@ router.patch('/:id/status', auth, async (req, res) => {
 
     project.status = status
     await project.save()
+
+    // Log activity if completed
+    if (status === 'completed') {
+      await createActivity({
+        type: 'PROJECT_COMPLETED',
+        user: req.user.id,
+        project: project._id
+      });
+    }
+
     res.json({ msg: 'Status updated', status: project.status })
   } catch (err) {
     res.status(500).json({ msg: err.message })

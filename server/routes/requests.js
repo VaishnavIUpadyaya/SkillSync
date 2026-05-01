@@ -5,6 +5,7 @@ const Project = require('../models/project');
 const auth = require('../middleware/auth');
 const sendMail = require('../utils/mailer')
 const User = require('../models/user')
+const { createActivity } = require('../utils/activityLogger');
 router.post('/', auth, async (req, res) => {
   try {
     const { projectId } = req.body;
@@ -52,9 +53,17 @@ router.put('/:id', auth, async (req, res) => {
 
     if (status === 'accepted') {
       const userToAdd = request.type === 'invite' ? request.invitee : request.sender
-      await Project.findByIdAndUpdate(request.project._id, {
+      const updatedProject = await Project.findByIdAndUpdate(request.project._id, {
         $addToSet: { members: userToAdd }
-      })
+      }, { new: true })
+
+      // Log activity if team is now full
+      if (updatedProject.members.length === updatedProject.teamSize) {
+        await createActivity({
+          type: 'TEAM_FULL',
+          project: updatedProject._id
+        });
+      }
 
       const acceptedUser = await User.findById(userToAdd)
       const projectTitle = request.project.title

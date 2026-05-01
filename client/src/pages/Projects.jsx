@@ -21,7 +21,7 @@ export default function Projects() {
   const [filterSkill, setFilterSkill] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterTag, setFilterTag] = useState('all')
-  const [form, setForm] = useState({ title: '', description: '', teamSize: 4, requiredSkills: [], tags: [], deadline: '' })
+  const [form, setForm] = useState({ title: '', description: '', teamSize: 4, requiredSkills: [], tags: [], deadline: '', githubRepo: '' })
   const [newSkill, setNewSkill] = useState({ name: '', proficiency: 3 })
   const [showForm, setShowForm] = useState(false)
   const navigate = useNavigate()
@@ -171,6 +171,17 @@ export default function Projects() {
                 value={form.description} onChange={e => setForm({...form, description: e.target.value})}
                 onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border)'} required />
+            </div>
+            <div>
+              <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>GitHub Repository (optional)</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', fontSize: '14px' }}>🔗</span>
+                <input style={{ ...inputStyle, paddingLeft: '34px' }}
+                  placeholder="https://github.com/username/repo"
+                  value={form.githubRepo} onChange={e => setForm({...form, githubRepo: e.target.value})}
+                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+              </div>
             </div>
             <div>
               <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Tags</label>

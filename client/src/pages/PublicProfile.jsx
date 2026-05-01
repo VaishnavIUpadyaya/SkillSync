@@ -109,7 +109,7 @@ export default function PublicProfile() {
             {user.skills.map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--navy3)', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <SkillTag name={s.name} proficiency={s.proficiency} />
+                  <SkillTag name={s.name} proficiency={s.proficiency} verified={s.verified} />
                   {endorsements[s.name]?.length > 0 && (
                     <span style={{ fontSize: '12px', color: 'var(--text3)' }}>
                       endorsed by {endorsements[s.name].slice(0, 2).join(', ')}
@@ -180,7 +180,7 @@ export default function PublicProfile() {
               <span style={{ fontSize: '13px', fontWeight: '600' }}>{r.rater.name}</span>
               <span style={{ fontSize: '14px', color: '#f59e0b', letterSpacing: '2px' }}>{stars(r.score)}</span>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text3)', marginBottom: '4px' }}>on {r.project.title}</p>
+            {r.project && <p style={{ fontSize: '12px', color: 'var(--text3)', marginBottom: '4px' }}>on {r.project.title}</p>}
             {r.comment && <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '6px' }}>{r.comment}</p>}
           </div>
         ))}

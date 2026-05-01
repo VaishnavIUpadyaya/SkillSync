@@ -32,6 +32,9 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/requests', require('./routes/requests'));
 app.use('/api/ratings', require('./routes/ratings'));
 app.use('/api/endorsements', require('./routes/endorsements'));
+app.use('/api/verify', require('./routes/verify'));
+app.use('/api/roadmap', require('./routes/roadmap'));
+app.use('/api/activities', require('./routes/activities'));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
