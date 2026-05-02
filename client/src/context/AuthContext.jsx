@@ -25,8 +25,10 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.get('/users/me')
       setUser(res.data)
+      return res.data
     } catch (err) {
       setUser(userData) // fallback to provided userData if fetch fails
+      return userData
     }
   }
 

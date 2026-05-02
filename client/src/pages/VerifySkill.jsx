@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import api from '../api'
 import Card from '../components/Card'
 
 export default function VerifySkill() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { setUser } = useAuth()
   const { skill, proficiency } = location.state || {}
 
   const [step, setStep] = useState('start')
@@ -45,7 +47,16 @@ export default function VerifySkill() {
         answer,
         expectedTopics: challenge.expectedTopics
       })
-      setResult(res.data)
+      const evaluation = res.data
+      setResult(evaluation)
+      if (evaluation.passed) {
+        try {
+          const updated = await api.get('/users/me')
+          setUser(updated.data)
+        } catch (err) {
+          console.error('Failed to refresh user after verification:', err)
+        }
+      }
       setStep('result')
     } catch (err) {
       setError(err.response?.data?.msg || 'Evaluation failed. Try again.')
@@ -96,7 +107,7 @@ export default function VerifySkill() {
             </div>
             {error && <p style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '16px' }}>{error}</p>}
             <button onClick={generateChallenge} disabled={loading} style={{
-              background: loading ? 'var(--border)' : 'var(--accent)',
+              background: loading ? 'var(--border)' : 'var(--accent3)',
               color: 'white', border: 'none', borderRadius: '10px',
               padding: '12px 32px', fontSize: '15px', fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Syne, sans-serif'
@@ -143,7 +154,7 @@ export default function VerifySkill() {
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={submitAnswer} disabled={loading} style={{
-              background: loading ? 'var(--border)' : 'var(--accent)',
+              background: loading ? 'var(--border)' : 'var(--accent3)',
               color: 'white', border: 'none', borderRadius: '10px',
               padding: '12px 24px', fontSize: '14px', fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Syne, sans-serif'

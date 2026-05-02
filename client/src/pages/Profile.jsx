@@ -194,12 +194,56 @@ export default function Profile() {
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'} />
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  {proficiencyLevels.map(({ level, label, color }) => (
-                    <button key={level} type="button" onClick={() => setNewSkill({ ...newSkill, proficiency: level })} title={label} style={{
-                      width: '32px', height: '36px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
-                      transition: 'all 0.15s', background: newSkill.proficiency >= level ? color : 'var(--border)', color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
-                    }}>{label}</button>
-                  ))}
+                 {proficiencyLevels.map(({ level, label, color }) => (
+  <button
+    key={level}
+    type="button"
+    onClick={() => setNewSkill({ ...newSkill, proficiency: level })}
+    title={label}
+    style={{
+      width: '32px',
+      height: '36px',
+      borderRadius: '6px',
+      border: 'none',
+      fontSize: '11px',
+      fontWeight: '600',
+      cursor: 'pointer',
+
+      transition: 'all 0.25s ease',
+
+      background: newSkill.proficiency === level ? color : 'var(--border)',
+color: newSkill.proficiency === level ? 'white' : 'var(--text3)',
+      color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
+
+      transform: newSkill.proficiency === level ? 'scale(1.1)' : 'scale(1)',
+      boxShadow: newSkill.proficiency >= level
+        ? '0 4px 12px rgba(0,0,0,0.2)'
+        : 'none',
+    }}
+
+    onMouseEnter={e => {
+      e.target.style.transform = 'scale(1.15)'
+      e.target.style.filter = 'brightness(1.1)'
+    }}
+
+    onMouseLeave={e => {
+      e.target.style.transform =
+        newSkill.proficiency === level ? 'scale(1.1)' : 'scale(1)'
+      e.target.style.filter = 'brightness(1)'
+    }}
+
+    onMouseDown={e => {
+      e.target.style.transform = 'scale(0.95)'
+    }}
+
+    onMouseUp={e => {
+      e.target.style.transform =
+        newSkill.proficiency === level ? 'scale(1.1)' : 'scale(1)'
+    }}
+  >
+    {label}
+  </button>
+))}
                 </div>
                 <button onClick={addSkill} style={{
                   background: 'var(--accent3)', color: 'white', border: 'none', borderRadius: '10px', padding: '0 17px', fontWeight: '600',
@@ -252,7 +296,6 @@ export default function Profile() {
     )
   }
 
-  // VIEW MODE (matches PublicProfile)
   const { projects, ratings } = profileData
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
@@ -264,7 +307,7 @@ export default function Profile() {
           fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif',
           display: 'flex', alignItems: 'center', gap: '8px'
         }}>
-          <span>✏️</span> Edit Profile
+           Edit Profile
         </button>
       </div>
 
