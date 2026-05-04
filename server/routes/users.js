@@ -70,8 +70,8 @@ router.get('/:id/profile', auth, async (req, res) => {
     if (!user) return res.status(404).json({ msg: 'User not found' })
 
     const projects = await Project.find({
-      members: req.params.id,
-      status: { $in: ['in-progress', 'completed'] }
+      $or: [{ members: req.params.id }, { owner: req.params.id }],
+      status: { $in: ['open', 'in-progress', 'completed'] }
     }).populate('owner', 'name').select('title status owner members createdAt')
 
     const ratings = await Rating.find({ ratee: req.params.id })
