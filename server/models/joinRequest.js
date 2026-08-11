@@ -8,5 +8,7 @@ const JoinRequestSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 })
 JoinRequestSchema.index({ project: 1, sender: 1 })
+JoinRequestSchema.index({ invitee: 1, status: 1 })
+JoinRequestSchema.index({ sender: 1, status: 1 })
 JoinRequestSchema.index({ createdAt: 1 })
 module.exports = mongoose.models.JoinRequest || mongoose.model('JoinRequest', JoinRequestSchema);

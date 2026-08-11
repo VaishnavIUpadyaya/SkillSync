@@ -1,47 +1,30 @@
-const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
+const { initSocket } = require('./socket');
+const app = require('./app');
 
 require('dotenv').config();
 
-const app = express();
+// ── Fail fast if critical env vars are missing ──────────────────────────────
+const REQUIRED_ENV = ['JWT_SECRET', 'MONGO_URI', 'PORT'];
+const missingEnv = REQUIRED_ENV.filter(k => !process.env[k]);
+if (missingEnv.length > 0) {
+  console.error(`\n❌  Missing required environment variables: ${missingEnv.join(', ')}`);
+  console.error('   Create a .env file. See .env.example for reference.\n');
+  process.exit(1);
+}
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://skill-sync-red.vercel.app'
-  ],
-  credentials: true
-}));
-
-app.use(express.json());
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many login attempts, please try again later.'
-});
-
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/projects', require('./routes/projects'));
-app.use('/api/requests', require('./routes/requests'));
-app.use('/api/ratings', require('./routes/ratings'));
-app.use('/api/endorsements', require('./routes/endorsements'));
-app.use('/api/verify', require('./routes/verify'));
-app.use('/api/roadmap', require('./routes/roadmap'));
-app.use('/api/activities', require('./routes/activities'));
+const server = http.createServer(app);
+initSocket(server);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-    console.log('MongoDB connected');
-
-    app.listen(process.env.PORT, () =>
-      console.log(`Server running on port ${process.env.PORT}`)
+    console.log('✅  MongoDB connected');
+    server.listen(process.env.PORT, () =>
+      console.log(`🚀  Server running on port ${process.env.PORT}`)
     );
   })
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.error('❌  MongoDB connection failed:', err.message);
+    process.exit(1);
+  });

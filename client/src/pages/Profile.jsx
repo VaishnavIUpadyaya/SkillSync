@@ -24,26 +24,31 @@ const proficiencyLevels = [
 
 export default function Profile() {
   const { user, setUser } = useAuth()
-  const [form, setForm] = useState({ name: '', role: '', available: true, skills: [] })
+  const [form, setForm] = useState(() => ({
+    name: user?.name || '',
+    role: user?.role || '',
+    skills: user?.skills || [],
+    bio: user?.bio || ''
+  }))
   const [newSkill, setNewSkill] = useState({ name: '', proficiency: 3 })
   const [saved, setSaved] = useState(false)
-  const [availableDates, setAvailableDates] = useState([])
-  const [calendarMonth, setCalendarMonth] = useState(new Date())
-  const [dateSaved, setDateSaved] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState(null)
   const [endorsements, setEndorsements] = useState({})
+  const [uploading, setUploading] = useState(false)
+  const [previewPic, setPreviewPic] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (user) {
-      setForm({
-        name: user.name,
-        role: user.role || '',
-        available: user.available ?? true,
-        skills: user.skills || []
-      })
-      setAvailableDates(user.availableDates || [])
+      setTimeout(() => {
+        setForm({
+          name: user.name,
+          role: user.role || '',
+          skills: user.skills || [],
+          bio: user.bio || ''
+        })
+      }, 0)
       
       // Fetch public-style data for the view mode
       api.get(`/users/${user._id}/profile`).then(r => setProfileData(r.data))
@@ -74,58 +79,44 @@ export default function Profile() {
     } catch (err) { console.error(err) }
   }
 
-  const saveDates = async () => {
+  const handleProfilePicChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
     try {
-      const res = await api.put('/users/availability', { availableDates })
+      setUploading(true)
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        setPreviewPic(event.target.result)
+      }
+      reader.readAsDataURL(file)
+
+      const formData = new FormData()
+      formData.append('profilePic', file)
+
+      const res = await api.post('/users/upload-picture', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       setUser(res.data)
-      setDateSaved(true)
-      setTimeout(() => setDateSaved(false), 2000)
-    } catch (err) { console.error(err) }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to upload profile picture')
+    } finally {
+      setUploading(false)
+    }
   }
 
-  const toggleDate = (dateStr) => {
-    setAvailableDates(prev =>
-      prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]
-    )
-  }
-
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    return { firstDay, daysInMonth, year, month }
-  }
-
-  const formatDate = (year, month, day) => {
-    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-  }
-
-  const isToday = (year, month, day) => {
-    const today = new Date()
-    return today.getFullYear() === year && today.getMonth() === month && today.getDate() === day
-  }
-
-  const isPast = (year, month, day) => {
-    const date = new Date(year, month, day)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return date < today
-  }
-
-  const { firstDay, daysInMonth, year, month } = getDaysInMonth(calendarMonth)
-  const monthName = calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const stars = (score) => '★'.repeat(score) + '☆'.repeat(5 - score)
-
   if (!user || (!isEditing && !profileData)) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', color: 'var(--text3)' }}>Loading...</div>
   )
 
   if (isEditing) {
     return (
-      <div style={{ width: '100%', maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="page-container" style={{ width: '100%', maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
+        <div className="profile-edit-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>Edit Profile</h1>
           <button onClick={() => setIsEditing(false)} style={{
             background: 'none', border: '1px solid var(--border)', color: 'var(--text2)',
@@ -133,9 +124,33 @@ export default function Profile() {
           }}>Cancel</button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', minWidth: 0 }}>
+        <div className="profile-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', minWidth: 0 }}>
           <Card style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minWidth: 0 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{
+                width: '80px', height: '80px', borderRadius: '50%', background: user?.profilePic ? 'transparent' : 'var(--accent2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: '800', fontSize: '32px', fontFamily: 'Syne, sans-serif', flexShrink: 0,
+                overflow: 'hidden', position: 'relative'
+              }}>
+                {user?.profilePic || previewPic ? (
+                  <img src={previewPic || user.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  user?.name[0].toUpperCase()
+                )}
+              </div>
+              <label style={{
+                background: 'var(--accent3)', color: 'white', border: 'none',
+                borderRadius: '8px', padding: '8px 16px', fontSize: '13px',
+                fontWeight: '600', cursor: uploading ? 'not-allowed' : 'pointer', fontFamily: 'Syne, sans-serif',
+                opacity: uploading ? 0.6 : 1, transition: 'opacity 0.2s'
+              }}>
+                {uploading ? 'Uploading...' : 'Change Picture'}
+                <input type="file" accept="image/*" onChange={handleProfilePicChange} style={{ display: 'none' }} disabled={uploading} />
+              </label>
+            </div>
+
+            <div className="profile-fields-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Full Name</label>
                 <input style={inputStyle} value={form.name}
@@ -152,22 +167,10 @@ export default function Profile() {
               </div>
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <div onClick={() => setForm({...form, available: !form.available})} style={{
-                width: '40px', height: '22px', borderRadius: '11px', position: 'relative',
-                background: form.available ? 'var(--accent)' : 'var(--border)',
-                transition: 'background 0.2s', cursor: 'pointer', flexShrink: 0,
-              }}>
-                <div style={{
-                  width: '16px', height: '16px', borderRadius: '50%', background: 'white',
-                  position: 'absolute', top: '3px', transition: 'left 0.2s',
-                  left: form.available ? '21px' : '3px',
-                }} />
-              </div>
-              <span style={{ fontSize: '14px', color: form.available ? 'var(--success)' : 'var(--text2)' }}>
-                {form.available ? 'Available for projects' : 'Not available'}
-              </span>
-            </label>
+            <div style={{ marginTop: '12px' }}>
+              <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Bio (optional)</label>
+              <textarea value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} style={{ ...inputStyle, height: '100px', resize: 'vertical' }} placeholder="A short bio about you, your focus and experience." />
+            </div>
 
             <div>
               <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '10px', display: 'block' }}>Skills</label>
@@ -212,8 +215,7 @@ export default function Profile() {
       transition: 'all 0.25s ease',
 
       background: newSkill.proficiency === level ? color : 'var(--border)',
-color: newSkill.proficiency === level ? 'white' : 'var(--text3)',
-      color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
+      color: newSkill.proficiency === level ? 'white' : 'var(--text3)',
 
       transform: newSkill.proficiency === level ? 'scale(1.1)' : 'scale(1)',
       boxShadow: newSkill.proficiency >= level
@@ -259,47 +261,25 @@ color: newSkill.proficiency === level ? 'white' : 'var(--text3)',
             }}>{saved ? 'Saved!' : 'Save Profile'}</button>
           </Card>
 
-          <Card style={{ minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Availability</p>
-              <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{availableDates.length} days selected</span>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <button onClick={() => setCalendarMonth(new Date(year, month - 1))} style={{ background: 'var(--navy3)', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
-              <span style={{ fontSize: '14px', fontWeight: '600' }}>{monthName}</span>
-              <button onClick={() => setCalendarMonth(new Date(year, month + 1))} style={{ background: 'var(--navy3)', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '14px' }}>›</button>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '8px' }}>
-              {days.map(d => <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text3)', padding: '4px 0', fontWeight: '600' }}>{d}</div>)}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-              {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1; const dateStr = formatDate(year, month, day); const selected = availableDates.includes(dateStr); const past = isPast(year, month, day); const today = isToday(year, month, day)
-                return <button key={day} onClick={() => !past && toggleDate(dateStr)} style={{
-                  aspectRatio: '1', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: today ? '700' : '400',
-                  background: selected ? 'var(--accent3)' : today ? 'rgba(108,99,255,0.15)' : 'var(--navy3)', color: selected ? 'white' : past ? 'var(--text3)' : today ? 'var(--accent2)' : 'var(--text)',
-                  cursor: past ? 'default' : 'pointer', opacity: past ? 0.4 : 1, transition: 'all 0.15s', outline: today ? '1px solid var(--accent)' : 'none'
-                }}>{day}</button>
-              })}
-            </div>
-            <button onClick={saveDates} style={{
-              marginTop: '16px', width: '100%', background: dateSaved ? 'rgba(34,211,165,0.15)' : 'var(--navy3)', color: dateSaved ? 'var(--success)' : 'var(--text2)',
-              border: `1px solid ${dateSaved ? 'rgba(34,211,165,0.3)' : 'var(--border)'}`, borderRadius: '10px', padding: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s'
-            }}>{dateSaved ? 'Dates Saved!' : 'Save Availability'}</button>
-          </Card>
         </div>
       </div>
     )
   }
 
   const { projects, ratings } = profileData
+  const profileUserId = profileData?.user?._id || user?._id
+  const leaderProjects = projects.filter((p) => {
+    const ownerId = p.owner?._id || p.owner
+    return ownerId?.toString() === profileUserId?.toString()
+  })
+  const memberProjects = projects.filter((p) => {
+    const ownerId = p.owner?._id || p.owner
+    return ownerId?.toString() !== profileUserId?.toString()
+  })
+
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="page-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="profile-view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>My Profile</h1>
         <button onClick={() => setIsEditing(true)} style={{
           background: 'var(--accent3)', color: 'white', border: 'none',
@@ -314,41 +294,68 @@ color: newSkill.proficiency === level ? 'white' : 'var(--text3)',
       <Card style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
           <div style={{
-            width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent2)',
+            width: '64px', height: '64px', borderRadius: '50%', background: user?.profilePic ? 'transparent' : 'var(--accent2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: '800', fontSize: '24px', fontFamily: 'Syne, sans-serif', flexShrink: 0
-          }}>{user.name[0].toUpperCase()}</div>
+            fontWeight: '800', fontSize: '24px', fontFamily: 'Syne, sans-serif', flexShrink: 0,
+            overflow: 'hidden'
+          }}>
+            {user?.profilePic ? (
+              <img src={user.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              user?.name[0].toUpperCase()
+            )}
+          </div>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px' }}>{user.name}</h1>
             <p style={{ fontSize: '14px', color: 'var(--text2)', marginTop: '2px' }}>{user.role || 'No role set'}</p>
+            {user.bio && (
+              <p style={{ fontSize: '14px', color: 'var(--text3)', marginTop: '10px', lineHeight: 1.7, maxWidth: '680px' }}>{user.bio}</p>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
               {user.rating > 0 && (
                 <span style={{ fontSize: '13px', color: '#f59e0b' }}>★ {user.rating}/5 ({user.ratingCount} reviews)</span>
               )}
-              <span style={{
-                fontSize: '12px', padding: '2px 10px', borderRadius: '20px',
-                background: user.available ? 'rgba(34,211,165,0.1)' : 'rgba(255,94,108,0.1)',
-                color: user.available ? 'var(--success)' : 'var(--danger)',
-                border: `1px solid ${user.available ? 'rgba(34,211,165,0.2)' : 'rgba(255,94,108,0.2)'}`
-              }}>{user.available ? 'Available' : 'Not Available'}</span>
             </div>
           </div>
         </div>
 
-        {user.availableDates?.length > 0 && (
-          <div style={{ marginBottom: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Available Dates</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {user.availableDates.sort().slice(0, 10).map(d => (
-                <span key={d} style={{
-                  fontSize: '12px', padding: '3px 10px', borderRadius: '6px',
-                  background: 'rgba(34,211,165,0.1)', color: 'var(--success)',
-                  border: '1px solid rgba(34,211,165,0.2)'
-                }}>{new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-              ))}
+        {/* Profile completion indicator */}
+        {(() => {
+          const hasName = Boolean(user.name && user.name.trim())
+          const hasRole = Boolean(user.role && user.role.trim())
+          const skillCount = Array.isArray(user.skills) ? user.skills.length : 0
+          const hasThreeSkills = skillCount >= 3
+          const hasVerified = (user.skills || []).some(s => s.verified)
+          const hasBio = Boolean(user.bio && user.bio.trim())
+          const total = [hasName, hasRole, hasThreeSkills, hasVerified, hasBio].filter(Boolean).length
+          const pct = Math.round((total / 5) * 100)
+          const suggestions = []
+          if (!hasRole) suggestions.push('add a role')
+          if (!hasThreeSkills) suggestions.push('add at least 3 skills')
+          if (!hasVerified) suggestions.push('verify a skill')
+          if (!hasBio) suggestions.push('add a bio')
+
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: 700 }}>Profile Completion</div>
+                <div style={{ fontSize: '13px', color: 'var(--text3)', fontWeight: 600 }}>{pct}% complete</div>
+              </div>
+
+              <div style={{ height: '12px', background: 'var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--accent2)' : 'var(--danger)', transition: 'width 0.4s' }} />
+              </div>
+
+              <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text3)' }}>
+                {pct === 100 ? (
+                  'Your profile is complete — great job! This helps improve your match ranking.'
+                ) : (
+                  `Your profile is ${pct}% complete — ${suggestions.join(', ')} to improve your match ranking.`
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Skills</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -376,14 +383,37 @@ color: newSkill.proficiency === level ? 'white' : 'var(--text3)',
 
       <Card style={{ marginBottom: '20px' }}>
         <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Projects ({projects.length})</p>
-        {projects.map(p => (
-          <div key={p._id} onClick={() => navigate(`/projects/${p._id}`)} style={{ padding: '12px', borderRadius: '10px', marginBottom: '8px', background: 'var(--navy3)', border: '1px solid var(--border)', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: '600', fontSize: '14px' }}>{p.title}</span>
-              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: p.status === 'completed' ? 'rgba(245,158,11,0.1)' : 'rgba(108,99,255,0.1)', color: p.status === 'completed' ? '#f59e0b' : 'var(--accent2)', border: `1px solid ${p.status === 'completed' ? 'rgba(245,158,11,0.2)' : 'rgba(108,99,255,0.2)'}` }}>{p.status}</span>
-            </div>
+
+        {leaderProjects.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text2)', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Team leader</p>
+            {leaderProjects.map((p) => (
+              <div key={p._id} onClick={() => navigate(`/projects/${p._id}`)} style={{ padding: '12px', borderRadius: '10px', marginBottom: '8px', background: 'var(--navy3)', border: '1px solid var(--border)', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <div>
+                    <span style={{ fontWeight: '600', fontSize: '14px', display: 'block' }}>{p.title}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px', display: 'block' }}>Team Leader</span>
+                  </div>
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: p.status === 'completed' ? 'rgba(245,158,11,0.1)' : 'rgba(108,99,255,0.1)', color: p.status === 'completed' ? '#f59e0b' : 'var(--accent2)', border: `1px solid ${p.status === 'completed' ? 'rgba(245,158,11,0.2)' : 'rgba(108,99,255,0.2)'}` }}>{p.status}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+
+        {memberProjects.length > 0 && (
+          <div>
+            <p style={{ fontSize: '12px', color: 'var(--text2)', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Other projects</p>
+            {memberProjects.map((p) => (
+              <div key={p._id} onClick={() => navigate(`/projects/${p._id}`)} style={{ padding: '12px', borderRadius: '10px', marginBottom: '8px', background: 'var(--navy3)', border: '1px solid var(--border)', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontWeight: '600', fontSize: '14px' }}>{p.title}</span>
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: p.status === 'completed' ? 'rgba(245,158,11,0.1)' : 'rgba(108,99,255,0.1)', color: p.status === 'completed' ? '#f59e0b' : 'var(--accent2)', border: `1px solid ${p.status === 'completed' ? 'rgba(245,158,11,0.2)' : 'rgba(108,99,255,0.2)'}` }}>{p.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card>

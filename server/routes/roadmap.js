@@ -5,24 +5,21 @@ const Roadmap = require('../models/roadmap')
 const Project = require('../models/project')
 const User = require('../models/user')
 
-// Helper: calculate number of weeks from now to deadline
 function getWeekCount(deadline) {
   if (!deadline) return 4
   const now = new Date()
   const end = new Date(deadline)
   const diffMs = end - now
   const weeks = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7))
-  return Math.max(2, Math.min(weeks, 12)) // between 2 and 12 weeks
+  return Math.max(2, Math.min(weeks, 12)) 
 }
 
-// Helper: match member by name from AI response
 function findMemberByName(members, name) {
   if (!name) return null
   const lower = name.toLowerCase()
   return members.find(m => m.name.toLowerCase().includes(lower) || lower.includes(m.name.toLowerCase().split(' ')[0].toLowerCase()))
 }
 
-// POST /api/roadmap/:projectId/generate — owner only
 router.post('/:projectId/generate', auth, async (req, res) => {
   try {
     const project = await Project.findById(req.params.projectId)
@@ -108,10 +105,20 @@ Respond ONLY with valid JSON in this exact format, no markdown:
       return res.status(status).json({ msg: data.error?.message || 'Error from Gemini API' })
     }
 
-    const text = data.candidates[0].content.parts[0].text
-    const parsed = JSON.parse(text)
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
+    const cleanText = rawText.replace(/```json|```/g, '').trim()
+    let parsed
+    try {
+      parsed = JSON.parse(cleanText)
+    } catch (parseErr) {
+      console.error('Failed to parse Gemini response:', rawText)
+      return res.status(500).json({ msg: 'AI generated invalid response format. Please try again.' })
+    }
 
-    // Map assignee names to member IDs
+    if (!parsed.weeks || !Array.isArray(parsed.weeks)) {
+      return res.status(500).json({ msg: 'AI generated invalid roadmap structure. Please try again.' })
+    }
+
     const weeks = parsed.weeks.map(w => ({
       ...w,
       tasks: w.tasks.map(t => {
@@ -125,7 +132,6 @@ Respond ONLY with valid JSON in this exact format, no markdown:
       })
     }))
 
-    // Upsert roadmap (replace if exists)
     const roadmap = await Roadmap.findOneAndUpdate(
       { project: project._id },
       { project: project._id, generatedAt: new Date(), weeks },
@@ -139,7 +145,6 @@ Respond ONLY with valid JSON in this exact format, no markdown:
   }
 })
 
-// GET /api/roadmap/:projectId — members only
 router.get('/:projectId', auth, async (req, res) => {
   try {
     const project = await Project.findById(req.params.projectId)
@@ -160,22 +165,19 @@ router.get('/:projectId', auth, async (req, res) => {
   }
 })
 
-// PATCH /api/roadmap/:projectId/tasks/:taskId — toggle done, members only
 router.patch('/:projectId/tasks/:taskId', auth, async (req, res) => {
   try {
     const project = await Project.findById(req.params.projectId)
     if (!project) return res.status(404).json({ msg: 'Project not found' })
 
-    const isMember = project.members.map(m => m.toString()).includes(req.user.id)
     const isOwner = project.owner.toString() === req.user.id
-    if (!isMember && !isOwner) {
-      return res.status(403).json({ msg: 'Access denied' })
+    if (!isOwner) {
+      return res.status(403).json({ msg: 'Only the project leader can mark tasks as completed' })
     }
 
     const roadmap = await Roadmap.findOne({ project: req.params.projectId })
     if (!roadmap) return res.status(404).json({ msg: 'No roadmap found' })
 
-    // Find the task in any week
     let found = false
     for (const week of roadmap.weeks) {
       const task = week.tasks.id(req.params.taskId)

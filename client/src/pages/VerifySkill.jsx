@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api'
 import Card from '../components/Card'
+
+const QUESTION_COUNT = 5
 
 export default function VerifySkill() {
   const navigate = useNavigate()
@@ -11,44 +13,70 @@ export default function VerifySkill() {
   const { skill, proficiency } = location.state || {}
 
   const [step, setStep] = useState('start')
-  const [challenge, setChallenge] = useState(null)
-  const [answer, setAnswer] = useState('')
+  const [quiz, setQuiz] = useState(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [selectedIndexes, setSelectedIndexes] = useState([])
+  const [feedback, setFeedback] = useState(null)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [canRetry, setCanRetry] = useState(true)
 
   const levelLabel = ['', 'Beginner', 'Familiar', 'Intermediate', 'Advanced', 'Expert'][proficiency] || ''
 
-  const generateChallenge = async () => {
+  const loadQuiz = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
       const res = await api.post('/verify/challenge', { skill, proficiency })
-      setChallenge(res.data)
+      const payload = res.data
+      setQuiz(payload.quiz)
+      setCanRetry(payload.canRetry)
       setStep('challenge')
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to generate challenge. Try again.')
+      setError(err.response?.data?.msg || 'Failed to generate quiz. Try again.')
     } finally {
       setLoading(false)
     }
+  }, [skill, proficiency])
+
+  const handleOptionSelect = (optionIndex) => {
+    if (feedback) return
+    const nextSelections = [...selectedIndexes]
+    nextSelections[currentIndex] = optionIndex
+    setSelectedIndexes(nextSelections)
+
+    const currentQuestion = quiz?.questions?.[currentIndex]
+    const isCorrect = optionIndex === currentQuestion?.correctIndex
+    setFeedback({
+      isCorrect,
+      explanation: currentQuestion?.explanation || 'Review the topic and try again.'
+    })
   }
 
-  const submitAnswer = async () => {
-    if (!answer.trim() || answer.trim().length < 10) {
-      setError('Please write a more detailed answer')
+  const goToNext = () => {
+    if (currentIndex >= QUESTION_COUNT - 1) {
+      submitAnswers()
       return
     }
+
+    setCurrentIndex((prev) => prev + 1)
+    setFeedback(null)
+  }
+
+  const submitAnswers = async () => {
     setLoading(true)
     setError('')
     try {
       const res = await api.post('/verify/evaluate', {
-        skill, proficiency,
-        question: challenge.question,
-        answer,
-        expectedTopics: challenge.expectedTopics
+        skill,
+        proficiency,
+        selectedIndexes,
+        quiz
       })
       const evaluation = res.data
       setResult(evaluation)
+      setCanRetry(evaluation.passed || false)
       if (evaluation.passed) {
         try {
           const updated = await api.get('/users/me')
@@ -71,8 +99,11 @@ export default function VerifySkill() {
     </div>
   )
 
+  const currentQuestion = quiz?.questions?.[currentIndex]
+  const progressPercent = ((currentIndex + (feedback ? 1 : 0)) / QUESTION_COUNT) * 100
+
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '32px 24px' }}>
+    <div className="page-container" style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px' }}>
       <button onClick={() => navigate('/profile')} style={{
         background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer',
         fontSize: '14px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0
@@ -91,81 +122,79 @@ export default function VerifySkill() {
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎯</div>
             <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '12px' }}>Ready to verify {skill}?</h2>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '8px', lineHeight: 1.6 }}>
-              You'll be given a short challenge based on your claimed level.
+              You will answer 5 multiple-choice questions tailored to your claimed level.
             </p>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.6 }}>
-              Answer in your own words — no running code needed. If you pass, your skill gets a verified badge and ranks higher in project matches.
+              A passing score unlocks the verified badge, and failed attempts enter a short cooldown to keep verification meaningful.
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
-              {['Answer in plain text', 'Takes 2-3 minutes', 'AI evaluated'].map((item, i) => (
-                <span key={i} style={{
-                  fontSize: '12px', padding: '4px 12px', borderRadius: '20px',
-                  background: 'rgba(108,99,255,0.12)', color: 'var(--accent2)',
-                  border: '1px solid rgba(108,99,255,0.25)'
-                }}>✓ {item}</span>
-              ))}
-            </div>
             {error && <p style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '16px' }}>{error}</p>}
-            <button onClick={generateChallenge} disabled={loading} style={{
+            <button onClick={loadQuiz} disabled={loading} style={{
               background: loading ? 'var(--border)' : 'var(--accent3)',
               color: 'white', border: 'none', borderRadius: '10px',
               padding: '12px 32px', fontSize: '15px', fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Syne, sans-serif'
             }}>
-              {loading ? 'Generating challenge...' : 'Start Challenge'}
+              {loading ? 'Loading quiz...' : 'Start Quiz'}
             </button>
           </div>
         </Card>
       )}
 
-      {step === 'challenge' && challenge && (
+      {step === 'challenge' && quiz && (
         <Card>
-          <div style={{ marginBottom: '20px', padding: '16px', background: 'var(--navy3)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '12px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Challenge</p>
-            <p style={{ fontSize: '15px', color: 'var(--text)', lineHeight: 1.7 }}>{challenge.question}</p>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text3)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Question {currentIndex + 1} of {QUESTION_COUNT}</p>
+              <p style={{ fontSize: '12px', color: 'var(--text2)' }}>{Math.round(progressPercent)}%</p>
+            </div>
+            <div style={{ height: '6px', background: 'var(--border)', borderRadius: '999px' }}>
+              <div style={{ height: '100%', width: `${progressPercent}%`, background: 'var(--accent3)', borderRadius: '999px', transition: 'width 0.3s ease' }} />
+            </div>
           </div>
 
-          <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(245,158,11,0.08)', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.2)' }}>
-            <p style={{ fontSize: '12px', color: '#f59e0b' }}>💡 Hint: {challenge.hint}</p>
+          <div style={{ marginBottom: '20px', padding: '18px', background: 'var(--navy3)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '15px', color: 'var(--text)', lineHeight: 1.7 }}>{currentQuestion?.question}</p>
           </div>
 
-          <div style={{ marginBottom: '8px' }}>
-            <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Your Answer</label>
-            <textarea
-              value={answer}
-              onChange={e => setAnswer(e.target.value)}
-              placeholder="Write your answer here. Explain your understanding clearly..."
-              style={{
-                width: '100%', minHeight: '160px', background: 'var(--navy3)',
-                border: '1px solid var(--border)', borderRadius: '10px',
-                padding: '12px 14px', color: 'var(--text)', fontSize: '14px',
-                resize: 'vertical', outline: 'none', fontFamily: 'DM Sans, sans-serif',
-                lineHeight: 1.6, boxSizing: 'border-box'
-              }}
-              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border)'}
-            />
-            <p style={{ fontSize: '12px', color: answer.length > 50 ? 'var(--success)' : 'var(--text3)', marginTop: '4px' }}>
-              {answer.length} characters {answer.length < 50 ? '— write more for better evaluation' : '— good length'}
-            </p>
+          <div style={{ display: 'grid', gap: '10px', marginBottom: '16px' }}>
+            {currentQuestion?.options?.map((option, index) => {
+              const selected = selectedIndexes[currentIndex] === index
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleOptionSelect(index)}
+                  disabled={Boolean(feedback)}
+                  style={{
+                    textAlign: 'left', borderRadius: '10px', padding: '12px 14px', border: selected ? '1px solid var(--accent3)' : '1px solid var(--border)',
+                    background: selected ? 'rgba(108,99,255,0.12)' : 'var(--navy3)', color: 'var(--text)', cursor: feedback ? 'default' : 'pointer', fontSize: '14px'
+                  }}
+                >
+                  <span style={{ fontWeight: 700, marginRight: '8px' }}>{String.fromCharCode(65 + index)}.</span>{option}
+                </button>
+              )
+            })}
           </div>
+
+          {feedback && (
+            <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: '10px', background: feedback.isCorrect ? 'rgba(34,211,165,0.12)' : 'rgba(245,158,11,0.12)', border: `1px solid ${feedback.isCorrect ? 'rgba(34,211,165,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+              <p style={{ fontSize: '13px', color: feedback.isCorrect ? 'var(--success)' : '#f59e0b', fontWeight: '700', marginBottom: '4px' }}>
+                {feedback.isCorrect ? 'Correct' : 'Not quite'}
+              </p>
+              <p style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.5 }}>{feedback.explanation}</p>
+            </div>
+          )}
 
           {error && <p style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={submitAnswer} disabled={loading} style={{
-              background: loading ? 'var(--border)' : 'var(--accent3)',
-              color: 'white', border: 'none', borderRadius: '10px',
-              padding: '12px 24px', fontSize: '14px', fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Syne, sans-serif'
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button onClick={goToNext} disabled={!feedback || loading} style={{
+              background: !feedback || loading ? 'var(--border)' : 'var(--accent3)', color: 'white', border: 'none', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: !feedback || loading ? 'not-allowed' : 'pointer'
             }}>
-              {loading ? 'Evaluating...' : 'Submit Answer'}
+              {currentIndex === QUESTION_COUNT - 1 ? (loading ? 'Submitting...' : 'Finish Quiz') : 'Next Question'}
             </button>
-            <button onClick={() => { setStep('start'); setAnswer(''); setError('') }} style={{
-              background: 'transparent', border: '1px solid var(--border)',
-              color: 'var(--text2)', borderRadius: '10px', padding: '12px 24px',
-              fontSize: '14px', cursor: 'pointer'
-            }}>Cancel</button>
+            <button onClick={() => { setStep('start'); setQuiz(null); setCurrentIndex(0); setSelectedIndexes([]); setFeedback(null); setResult(null); setError('') }} style={{
+              background: 'transparent', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer'
+            }}>Restart</button>
           </div>
         </Card>
       )}
@@ -173,22 +202,13 @@ export default function VerifySkill() {
       {step === 'result' && result && (
         <Card>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{ fontSize: '56px', marginBottom: '12px' }}>
-              {result.passed ? '🎉' : '📚'}
-            </div>
+            <div style={{ fontSize: '56px', marginBottom: '12px' }}>{result.passed ? '🎉' : '📚'}</div>
             <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px', color: result.passed ? 'var(--success)' : 'var(--danger)' }}>
               {result.passed ? 'Skill Verified!' : 'Not Quite Yet'}
             </h2>
-            <div style={{ fontSize: '36px', fontWeight: '800', fontFamily: 'Syne, sans-serif', color: result.passed ? 'var(--success)' : '#f59e0b' }}>
-              {result.score}/100
-            </div>
+            <div style={{ fontSize: '36px', fontWeight: '800', fontFamily: 'Syne, sans-serif', color: result.passed ? 'var(--success)' : '#f59e0b' }}>{result.score}/100</div>
             <div style={{ width: '200px', height: '6px', background: 'var(--border)', borderRadius: '3px', margin: '12px auto' }}>
-              <div style={{
-                height: '100%', borderRadius: '3px',
-                width: `${result.score}%`,
-                background: result.score >= 70 ? 'var(--success)' : result.score >= 40 ? '#f59e0b' : 'var(--danger)',
-                transition: 'width 0.8s ease'
-              }} />
+              <div style={{ height: '100%', borderRadius: '3px', width: `${result.score}%`, background: result.score >= 70 ? 'var(--success)' : result.score >= 40 ? '#f59e0b' : 'var(--danger)', transition: 'width 0.8s ease' }} />
             </div>
           </div>
 
@@ -197,44 +217,24 @@ export default function VerifySkill() {
             <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.6 }}>{result.feedback}</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-            {result.strongPoints?.length > 0 && (
-              <div style={{ padding: '14px', background: 'rgba(34,211,165,0.08)', borderRadius: '10px', border: '1px solid rgba(34,211,165,0.2)' }}>
-                <p style={{ fontSize: '12px', color: 'var(--success)', fontWeight: '600', marginBottom: '8px' }}>✓ Strong Points</p>
-                {result.strongPoints.map((p, i) => (
-                  <p key={i} style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '4px' }}>• {p}</p>
-                ))}
+          <div style={{ display: 'grid', gap: '10px', marginBottom: '16px' }}>
+            {result.results?.map((item, index) => (
+              <div key={index} style={{ padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--navy3)' }}>
+                <p style={{ fontSize: '13px', marginBottom: '6px', color: item.isCorrect ? 'var(--success)' : '#f59e0b', fontWeight: '700' }}>{item.isCorrect ? '✓' : '•'} {item.question}</p>
+                <p style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: 1.5 }}>{item.explanation}</p>
               </div>
-            )}
-            {result.improvements?.length > 0 && (
-              <div style={{ padding: '14px', background: 'rgba(245,158,11,0.08)', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.2)' }}>
-                <p style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600', marginBottom: '8px' }}>📈 Improve On</p>
-                {result.improvements.map((p, i) => (
-                  <p key={i} style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '4px' }}>• {p}</p>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
             {result.passed ? (
-              <button onClick={() => navigate('/profile')} style={{
-                background: 'var(--success)', color: 'white', border: 'none',
-                borderRadius: '10px', padding: '12px 24px', fontSize: '14px',
-                fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
-              }}>View My Profile</button>
+              <button onClick={() => navigate('/profile')} style={{ background: 'var(--success)', color: 'white', border: 'none', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif' }}>View My Profile</button>
             ) : (
-              <button onClick={() => { setStep('start'); setAnswer(''); setResult(null) }} style={{
-                background: 'var(--accent)', color: 'white', border: 'none',
-                borderRadius: '10px', padding: '12px 24px', fontSize: '14px',
-                fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
-              }}>Try Again</button>
+              <button onClick={() => { if (canRetry) { setStep('start'); setQuiz(null); setCurrentIndex(0); setSelectedIndexes([]); setFeedback(null); setResult(null); setError('') } else { setError('Please wait before trying again.') } }} style={{ background: canRetry ? 'var(--accent)' : 'var(--border)', color: 'white', border: 'none', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: canRetry ? 'pointer' : 'not-allowed' }}>
+                {canRetry ? 'Try Again' : 'Retry Cooldown'}
+              </button>
             )}
-            <button onClick={() => navigate('/profile')} style={{
-              background: 'transparent', border: '1px solid var(--border)',
-              color: 'var(--text2)', borderRadius: '10px', padding: '12px 24px',
-              fontSize: '14px', cursor: 'pointer'
-            }}>Back to Profile</button>
+            <button onClick={() => navigate('/profile')} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer' }}>Back to Profile</button>
           </div>
         </Card>
       )}

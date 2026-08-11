@@ -13,4 +13,6 @@ const ActivitySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+ActivitySchema.index({ createdAt: -1 })
+
 module.exports = mongoose.models.Activity || mongoose.model('Activity', ActivitySchema);

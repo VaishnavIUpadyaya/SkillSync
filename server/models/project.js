@@ -11,9 +11,18 @@ const ProjectSchema = new mongoose.Schema({
   tags: [{ type: String }],
   deadline: { type: Date, default: null },
   githubRepo: { type: String, default: '' },
+  resources: [{
+    title: { type: String, required: true },
+    url: { type: String, required: true },
+    category: { type: String, default: 'General' },
+    addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now }
+  }],
   views: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 })
 ProjectSchema.index({ status: 1 })
 ProjectSchema.index({ owner: 1 })
+ProjectSchema.index({ createdAt: -1 })
+ProjectSchema.index({ members: 1 })
 module.exports = mongoose.models.Project || mongoose.model('Project', ProjectSchema);

@@ -82,40 +82,46 @@ export default function Projects() {
   ]
 
   return (
-    <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+    <div className="page-container" style={{ width: '100%', margin: '0 auto', padding: '0', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'clamp(18px, 4vw, 28px)', gap: '12px', flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>Projects</h1>
-          <p style={{ color: 'var(--text2)', fontSize: '14px', marginTop: '4px' }}>
+          <h1 style={{ fontSize: 'clamp(24px, 5vw, 28px)', fontWeight: '800', letterSpacing: '-0.5px' }}>Projects</h1>
+          <p style={{ color: 'var(--text2)', fontSize: 'clamp(12px, 2vw, 14px)', marginTop: '4px' }}>
             {filtered.length} of {projects.length} projects
           </p>
         </div>
         <button onClick={() => setShowForm(!showForm)} style={{
           background: showForm ? 'transparent' : 'var(--accent3)', color: showForm ? 'var(--text2)' : 'white',
           border: showForm ? '1px solid var(--border)' : 'none',
-          borderRadius: '10px', padding: '10px 20px', fontSize: '14px',
-          fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
-        }}>
-          {showForm ? 'Cancel' : '+ New Project'}
+          borderRadius: '10px', padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)', fontSize: 'clamp(12px, 1.5vw, 14px)',
+          fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif', flexShrink: 0,
+          transition: 'all 0.2s'
+        }}
+          onMouseEnter={e => { if (!showForm) e.target.style.background = 'var(--accent2)'; }}
+          onMouseLeave={e => { if (!showForm) e.target.style.background = 'var(--accent3)'; }}
+        >
+          {showForm ? 'Cancel' : '+ New'}
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '0.625rem', marginBottom: '1rem', minWidth: 0 }}>
-        <div style={{ position: 'relative' }}>
+      <div className="projects-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 100%, 180px), 1fr))', gap: 'clamp(8px, 2vw, 10px)', marginBottom: 'clamp(12px, 2vw, 16px)', minWidth: 0 }}>
+        <div style={{ position: 'relative', gridColumn: 'span 1' }}>
           <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)' }}
             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input style={{ ...inputStyle, paddingLeft: '38px' }}
-            placeholder="Search projects..."
+            placeholder="Search..."
             value={search} onChange={e => setSearch(e.target.value)}
             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
             onBlur={e => e.target.style.borderColor = 'var(--border)'} />
         </div>
-        <input style={inputStyle} placeholder="Filter by skill..."
-          value={filterSkill} onChange={e => setFilterSkill(e.target.value)}
-          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+        <div style={{ position: 'relative' }}>
+          <input style={inputStyle} placeholder="By skill..."
+            value={filterSkill} onChange={e => setFilterSkill(e.target.value)}
+            onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+            onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+        </div>
         <select style={{ ...inputStyle, cursor: 'pointer' }}
           value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="all">All Status</option>
@@ -131,33 +137,36 @@ export default function Projects() {
         {hasFilters && (
           <button onClick={clearFilters} style={{
             background: 'transparent', border: '1px solid var(--border)',
-            color: 'var(--text2)', borderRadius: '10px', padding: '0 14px',
-            fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap'
-          }}>Clear</button>
+            color: 'var(--text2)', borderRadius: '10px', padding: '0 clamp(8px, 2vw, 14px)',
+            fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s'
+          }}
+            onMouseEnter={e => e.target.style.borderColor = 'var(--danger)'}
+            onMouseLeave={e => e.target.style.borderColor = 'var(--border)'}
+          >Clear</button>
         )}
       </div>
 
       {showForm && (
-        <Card style={{ marginBottom: '1.75rem', minWidth: 0 }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>Create New Project</h2>
+        <Card style={{ marginBottom: 'clamp(12px, 3vw, 16px)', minWidth: 0 }}>
+          <h2 style={{ fontSize: 'clamp(16px, 3vw, 18px)', fontWeight: '700', marginBottom: '20px' }}>Create New Project</h2>
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 100%, 200px), 1fr))', gap: '12px' }}>
               <div>
-                <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Project Title</label>
+                <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Project Title</label>
                 <input style={inputStyle} placeholder="e.g. AI Study Helper"
                   value={form.title} onChange={e => setForm({...form, title: e.target.value})}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'} required />
               </div>
               <div>
-                <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Team Size</label>
+                <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Team Size</label>
                 <input style={inputStyle} type="number" min="2" max="10"
                   value={form.teamSize} onChange={e => setForm({...form, teamSize: Number(e.target.value)})}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'} />
               </div>
               <div>
-                <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Deadline</label>
+                <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Deadline</label>
                 <input style={{ ...inputStyle, colorScheme: 'dark' }} type="date"
                   value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
@@ -165,7 +174,7 @@ export default function Projects() {
               </div>
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Description</label>
+              <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>Description</label>
               <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: '80px' }}
                 placeholder="Describe your project..."
                 value={form.description} onChange={e => setForm({...form, description: e.target.value})}
@@ -173,7 +182,7 @@ export default function Projects() {
                 onBlur={e => e.target.style.borderColor = 'var(--border)'} required />
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>GitHub Repository (optional)</label>
+              <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '6px', display: 'block' }}>GitHub Repository (optional)</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', fontSize: '14px' }}>🔗</span>
                 <input style={{ ...inputStyle, paddingLeft: '34px' }}
@@ -184,11 +193,11 @@ export default function Projects() {
               </div>
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Tags</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Tags</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {TAGS.map(tag => (
                   <button key={tag} type="button" onClick={() => toggleTag(tag)} style={{
-                    padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500',
+                    padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '500',
                     cursor: 'pointer', transition: 'all 0.2s',
                     background: form.tags.includes(tag) ? `${tagColor(tag)}22` : 'transparent',
                     color: form.tags.includes(tag) ? tagColor(tag) : 'var(--text3)',
@@ -198,127 +207,143 @@ export default function Projects() {
               </div>
             </div>
             <div>
-              <label style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Required Skills</label>
+              <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '8px', display: 'block' }}>Required Skills</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minHeight: '28px' }}>
                 {form.requiredSkills.map((s, i) => (
-                  <span key={i} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(108,99,255,0.12)', border: '1px solid rgba(108,99,255,0.25)', color: 'var(--accent2)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', marginRight: '4px', marginBottom: '4px' }}>
-                    {s.name} <span style={{ color: 'var(--text3)', marginLeft: '4px' }}>{s.proficiency}/5</span>
+                  <span key={i} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(108,99,255,0.12)', border: '1px solid rgba(108,99,255,0.25)', color: 'var(--accent2)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '500' }}>
+                    {s.name} <span style={{ color: 'var(--text3)', marginLeft: '4px', fontSize: '10px' }}>{s.proficiency}/5</span>
                     <button type="button" onClick={() => removeSkill(i)} style={{
-                      background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0, marginLeft: '6px'
+                      background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: 0, marginLeft: '4px'
                     }}>×</button>
                   </span>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input style={{ ...inputStyle, flex: 1 }} placeholder="Skill name"
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <input style={{ ...inputStyle, flex: 1, minWidth: '140px' }} placeholder="Skill name"
                   value={newSkill.name} onChange={e => setNewSkill({...newSkill, name: e.target.value})}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'} />
-                <div style={{ display: 'flex', gap: '4px' }}>
-  {proficiencyLevels.map(({ level, label, color }) => (
-    <button key={level} type="button"
-      onClick={() => setNewSkill({...newSkill, proficiency: level})}
-      title={label}
-      style={{
-        width: '28px', height: '36px', borderRadius: '6px', border: 'none',
-        fontSize: '11px', fontWeight: '600', cursor: 'pointer',
-        transition: 'all 0.15s',
-        background: newSkill.proficiency >= level ? color : 'var(--border)',
-        color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
-      }}>{label}</button>
-  ))}
-</div>
+                <div style={{ display: 'flex', gap: '3px' }}>
+                  {proficiencyLevels.map(({ level, label, color }) => (
+                    <button key={level} type="button"
+                      onClick={() => setNewSkill({...newSkill, proficiency: level})}
+                      title={label}
+                      style={{
+                        width: '26px', height: '36px', borderRadius: '6px', border: 'none',
+                        fontSize: '10px', fontWeight: '600', cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        background: newSkill.proficiency >= level ? color : 'var(--border)',
+                        color: newSkill.proficiency >= level ? 'white' : 'var(--text3)',
+                      }}>{label}</button>
+                  ))}
+                </div>
                 <button type="button" onClick={addSkill} style={{
                   background: 'var(--navy3)', color: 'var(--text)', border: '1px solid var(--border)',
-                  borderRadius: '10px', padding: '0 16px', cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap'
+                  borderRadius: '10px', padding: '0 12px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap'
                 }}>Add</button>
               </div>
             </div>
             <button type="submit" style={{
               background: 'var(--accent3)', color: 'white', border: 'none',
-              borderRadius: '10px', padding: '13px', fontSize: '15px',
-              fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif'
-            }}>Create Project</button>
+              borderRadius: '10px', padding: '12px', fontSize: 'clamp(13px, 2vw, 15px)',
+              fontWeight: '600', cursor: 'pointer', fontFamily: 'Syne, sans-serif', transition: 'all 0.2s'
+            }}
+              onMouseEnter={e => e.target.style.background = 'var(--accent2)'}
+              onMouseLeave={e => e.target.style.background = 'var(--accent3)'}
+            >Create Project</button>
           </form>
         </Card>
       )}
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text3)' }}>
-          <p style={{ fontSize: '16px', marginBottom: '8px' }}>No projects found</p>
-          <p style={{ fontSize: '13px' }}>Try adjusting your search or filters</p>
+        <div style={{ textAlign: 'center', padding: 'clamp(40px, 10vw, 60px) 0', color: 'var(--text3)' }}>
+          <p style={{ fontSize: 'clamp(14px, 2vw, 16px)', marginBottom: '8px' }}>No projects found</p>
+          <p style={{ fontSize: 'clamp(12px, 1.5vw, 13px)' }}>Try adjusting your search or filters</p>
           {hasFilters && (
             <button onClick={clearFilters} style={{
               marginTop: '16px', background: 'var(--accent)', color: 'white',
               border: 'none', borderRadius: '8px', padding: '8px 16px',
-              fontSize: '13px', cursor: 'pointer'
-            }}>Clear filters</button>
+              fontSize: 'clamp(12px, 1.5vw, 13px)', cursor: 'pointer', transition: 'all 0.2s'
+            }}
+              onMouseEnter={e => e.target.style.background = 'var(--accent2)'}
+              onMouseLeave={e => e.target.style.background = 'var(--accent)'}
+            >Clear filters</button>
           )}
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '1rem', minWidth: 0 }}>
+        <div style={{ display: 'grid', gap: 'clamp(10px, 2vw, 12px)', minWidth: 0 }}>
           {filtered.map(p => {
             const daysLeft = p.deadline ? Math.ceil((new Date(p.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null
+            const isCompleted = p.status === 'completed'
             return (
               <div key={p._id} style={{
-                background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px',
-                padding: '20px 24px', transition: 'border-color 0.2s, transform 0.2s', cursor: 'pointer'
+                background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'clamp(12px, 2vw, 16px)',
+                padding: 'clamp(12px, 3vw, 24px)', transition: 'border-color 0.2s, transform 0.2s', cursor: 'pointer',
+                opacity: isCompleted ? 0.62 : 1,
+                filter: isCompleted ? 'grayscale(0.25)' : 'none'
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)' }}
-                onClick={() => navigate(`/projects/${p._id}`)}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text)' }}>{p.title}</h3>
-                      <span style={{
-                        fontSize: '11px', padding: '2px 8px', borderRadius: '20px',
-                        background: p.status === 'open' ? 'rgba(34,211,165,0.1)' : p.status === 'in-progress' ? 'rgba(108,99,255,0.1)' : 'rgba(245,158,11,0.1)',
-                        color: p.status === 'open' ? 'var(--success)' : p.status === 'in-progress' ? 'var(--accent2)' : '#f59e0b',
-                        border: `1px solid ${p.status === 'open' ? 'rgba(34,211,165,0.2)' : p.status === 'in-progress' ? 'rgba(108,99,255,0.2)' : 'rgba(245,158,11,0.2)'}`
-                      }}>{p.status}</span>
-                      {p.tags?.map(tag => (
-                        <span key={tag} style={{
-                          fontSize: '11px', padding: '2px 8px', borderRadius: '20px',
-                          background: `${tagColor(tag)}18`,
-                          color: tagColor(tag),
-                          border: `1px solid ${tagColor(tag)}40`
-                        }}>{tag}</span>
-                      ))}
-                      {daysLeft !== null && (
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-1px)'; if (isCompleted) e.currentTarget.style.opacity = '0.85' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; if (isCompleted) e.currentTarget.style.opacity = '0.62' }}
+                onClick={() => navigate(`/projects/${p._id}`)}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                        <h3 style={{ fontSize: 'clamp(14px, 2.5vw, 16px)', fontWeight: '700', color: 'var(--text)', wordBreak: 'break-word' }}>{p.title}</h3>
                         <span style={{
-                          fontSize: '11px', padding: '2px 8px', borderRadius: '20px',
-                          background: daysLeft < 3 ? 'rgba(255,94,108,0.1)' : 'rgba(255,255,255,0.05)',
-                          color: daysLeft < 3 ? 'var(--danger)' : 'var(--text3)',
-                          border: `1px solid ${daysLeft < 3 ? 'rgba(255,94,108,0.3)' : 'var(--border)'}`
-                        }}>
-                          {daysLeft < 0 ? 'Expired' : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`}
-                        </span>
+                          fontSize: '10px', padding: '2px 8px', borderRadius: '20px',
+                          background: p.status === 'open' ? 'rgba(34,211,165,0.1)' : p.status === 'in-progress' ? 'rgba(108,99,255,0.1)' : 'rgba(245,158,11,0.1)',
+                          color: p.status === 'open' ? 'var(--success)' : p.status === 'in-progress' ? 'var(--accent2)' : '#f59e0b',
+                          border: `1px solid ${p.status === 'open' ? 'rgba(34,211,165,0.2)' : p.status === 'in-progress' ? 'rgba(108,99,255,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                          whiteSpace: 'nowrap', flexShrink: 0
+                        }}>{p.status}</span>
+                        {isCompleted && (
+                          <span style={{
+                            fontSize: '10px', padding: '2px 8px', borderRadius: '20px',
+                            background: 'rgba(255,255,255,0.04)', color: 'var(--text3)',
+                            border: '1px solid var(--border)', whiteSpace: 'nowrap', flexShrink: 0
+                          }}>🏁 Archived</span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 'clamp(12px, 2vw, 13px)', color: 'var(--text2)', marginBottom: '10px', lineHeight: 1.4 }}>{p.description}</p>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 'fit-content' }}>
+                      <p style={{ fontSize: '11px', color: 'var(--text3)' }}>by {p.owner.name}</p>
+                      <p style={{ fontSize: 'clamp(11px, 2vw, 13px)', color: 'var(--text2)', marginTop: '4px' }}>
+                        <span style={{ color: 'var(--accent2)', fontWeight: '600' }}>{p.members.length}</span>/{p.teamSize}
+                      </p>
+                      {p.views > 0 && (
+                        <p style={{ fontSize: '10px', color: 'var(--text3)', marginTop: '4px' }}>👁 {p.views}</p>
                       )}
                     </div>
-                    <p style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '12px', lineHeight: 1.5 }}>{p.description}</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {p.requiredSkills.map((s, i) => (
-                        <span key={i} style={{
-                          background: filterSkill && normalize(s.name).includes(normalize(filterSkill)) ? 'rgba(108,99,255,0.25)' : 'rgba(108,99,255,0.12)',
-                          border: `1px solid ${filterSkill && normalize(s.name).includes(normalize(filterSkill)) ? 'rgba(108,99,255,0.6)' : 'rgba(108,99,255,0.25)'}`,
-                          color: 'var(--accent2)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500'
-                        }}>{s.name} <span style={{ color: 'var(--text3)', fontSize: '11px' }}>
-  {s.proficiency === 1 ? 'Beginner' : s.proficiency === 2 ? 'Familiar' : s.proficiency === 3 ? 'Intermediate' : s.proficiency === 4 ? 'Advanced' : 'Expert'}
-</span></span>
-                      ))}
-                    </div>
                   </div>
-                  <div style={{ textAlign: 'right', marginLeft: '20px', flexShrink: 0 }}>
-                    <p style={{ fontSize: '12px', color: 'var(--text3)' }}>by {p.owner.name}</p>
-                    <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>
-                      <span style={{ color: 'var(--accent2)', fontWeight: '600' }}>{p.members.length}</span>/{p.teamSize} members
-                    </p>
-                    {p.views > 0 && (
-                      <p style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px' }}>
-                        👁 {p.views} views
-                      </p>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {p.tags?.slice(0, 2).map(tag => (
+                      <span key={tag} style={{
+                        fontSize: '10px', padding: '2px 8px', borderRadius: '20px',
+                        background: `${tagColor(tag)}18`, color: tagColor(tag),
+                        border: `1px solid ${tagColor(tag)}40`, whiteSpace: 'nowrap'
+                      }}>{tag}</span>
+                    ))}
+                    {p.requiredSkills.slice(0, 3).map((s, i) => (
+                      <span key={i} style={{
+                        background: filterSkill && normalize(s.name).includes(normalize(filterSkill)) ? 'rgba(108,99,255,0.25)' : 'rgba(108,99,255,0.12)',
+                        border: `1px solid ${filterSkill && normalize(s.name).includes(normalize(filterSkill)) ? 'rgba(108,99,255,0.6)' : 'rgba(108,99,255,0.25)'}`,
+                        color: 'var(--accent2)', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '500', whiteSpace: 'nowrap'
+                      }}>{s.name}</span>
+                    ))}
+                    {daysLeft !== null && (
+                      <span style={{
+                        fontSize: '10px', padding: '2px 8px', borderRadius: '20px',
+                        background: daysLeft < 3 ? 'rgba(255,94,108,0.1)' : 'rgba(255,255,255,0.05)',
+                        color: daysLeft < 3 ? 'var(--danger)' : 'var(--text3)',
+                        border: `1px solid ${daysLeft < 3 ? 'rgba(255,94,108,0.3)' : 'var(--border)'}`, whiteSpace: 'nowrap'
+                      }}>
+                        {daysLeft < 0 ? 'Expired' : daysLeft === 0 ? 'Today' : `${daysLeft}d`}
+                      </span>
                     )}
                   </div>
                 </div>

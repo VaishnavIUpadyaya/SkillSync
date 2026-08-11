@@ -9,7 +9,8 @@ router.get('/', auth, async (req, res) => {
       .populate('user', 'name')
       .populate('project', 'title')
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
     res.json(activities);
   } catch (err) {
     res.status(500).json({ msg: err.message });

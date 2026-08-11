@@ -62,10 +62,17 @@ export default function PublicProfile() {
       <Card style={{ marginBottom: '20px' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
     <div style={{
-      width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent2)',
+      width: '64px', height: '64px', borderRadius: '50%', background: user?.profilePic ? 'transparent' : 'var(--accent2)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: '800', fontSize: '24px', fontFamily: 'Syne, sans-serif', flexShrink: 0
-    }}>{user.name[0].toUpperCase()}</div>
+      fontWeight: '800', fontSize: '24px', fontFamily: 'Syne, sans-serif', flexShrink: 0,
+      overflow: 'hidden'
+    }}>
+      {user?.profilePic ? (
+        <img src={user.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        user?.name[0].toUpperCase()
+      )}
+    </div>
     <div>
       <h1 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px' }}>{user.name}</h1>
       <p style={{ fontSize: '14px', color: 'var(--text2)', marginTop: '2px' }}>{user.role || 'No role set'}</p>
@@ -73,33 +80,9 @@ export default function PublicProfile() {
         {user.rating > 0 && (
           <span style={{ fontSize: '13px', color: '#f59e0b' }}>★ {user.rating}/5 ({user.ratingCount} reviews)</span>
         )}
-        <span style={{
-          fontSize: '12px', padding: '2px 10px', borderRadius: '20px',
-          background: user.available ? 'rgba(34,211,165,0.1)' : 'rgba(255,94,108,0.1)',
-          color: user.available ? 'var(--success)' : 'var(--danger)',
-          border: `1px solid ${user.available ? 'rgba(34,211,165,0.2)' : 'rgba(255,94,108,0.2)'}`
-        }}>{user.available ? 'Available' : 'Not Available'}</span>
       </div>
     </div>
   </div>
-
-  {user.availableDates?.length > 0 && (
-    <div style={{ marginBottom: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-      <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Available Dates</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-        {user.availableDates.sort().slice(0, 10).map(d => (
-          <span key={d} style={{
-            fontSize: '12px', padding: '3px 10px', borderRadius: '6px',
-            background: 'rgba(34,211,165,0.1)', color: 'var(--success)',
-            border: '1px solid rgba(34,211,165,0.2)'
-          }}>{new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-        ))}
-        {user.availableDates.length > 10 && (
-          <span style={{ fontSize: '12px', color: 'var(--text3)', alignSelf: 'center' }}>+{user.availableDates.length - 10} more</span>
-        )}
-      </div>
-    </div>
-  )}
 
   <p style={{ fontSize: '13px', color: 'var(--text2)', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Skills</p>
         {user.skills.length === 0 ? (

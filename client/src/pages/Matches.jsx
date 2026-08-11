@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import api from '../api'
 import Card from '../components/Card'
 import SkillTag from '../components/SkillTag'
+import ChatDrawer from '../components/ChatDrawer'
+import toast from 'react-hot-toast'
 
 export default function Matches() {
   const { id } = useParams()
   const [matches, setMatches] = useState([])
   const [invited, setInvited] = useState({})
   const [loading, setLoading] = useState({})
+  const [activeRecipient, setActiveRecipient] = useState(null)
   const navigate = useNavigate()
+
+  const location = useLocation()
+  const urlParams = new URLSearchParams(location.search)
+  const skillFilter = urlParams.get('skill')
 
   useEffect(() => {
   const fetchData = async () => {
     try {
-      const matchesRes = await api.get(`/projects/${id}/matches`)
+      const skillQuery = skillFilter ? `?skill=${encodeURIComponent(skillFilter)}` : ''
+      const matchesRes = await api.get(`/projects/${id}/matches${skillQuery}`)
       setMatches(matchesRes.data)
 
       const invitedRes = await api.get(`/requests/invited/${id}`)
@@ -28,12 +36,12 @@ export default function Matches() {
       setInvited(invitedMap)
 
     } catch (err) {
-      console.log(err)
+      console.error('Failed to fetch matches:', err?.response?.data?.msg || err.message)
     }
   }
 
-  fetchData()
-}, [id])
+    fetchData()
+  }, [id, skillFilter])
   const scoreColor = (score) => {
     if (score >= 0.8) return 'var(--success)'
     if (score >= 0.5) return 'var(--accent2)'
@@ -70,7 +78,7 @@ export default function Matches() {
         [userId]: true
       }))
     } else {
-      alert(msg)
+      toast.error(msg)
     }
   }
 
@@ -82,10 +90,10 @@ export default function Matches() {
 }
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
-        <div>
+      <div className="dashboard-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+          <div>
           <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>Recommended Members</h1>
-          <p style={{ color: 'var(--text2)', fontSize: '14px', marginTop: '4px' }}>Ranked by skill compatibility</p>
+          <p style={{ color: 'var(--text2)', fontSize: '14px', marginTop: '4px' }}>{skillFilter ? `Matches for "${skillFilter}"` : 'Ranked by skill compatibility'}</p>
         </div>
         <button onClick={() => navigate(`/projects/${id}`)} style={{
           background: 'transparent', border: '1px solid var(--border)',
@@ -102,7 +110,7 @@ export default function Matches() {
       ) : (
         <div style={{ display: 'grid', gap: '14px' }}>
           {matches.map(({ user, score }, index) => (
-            <div key={user._id} style={{
+            <div key={user._id} className="match-card-row" style={{
               background: 'var(--card)', border: '1px solid var(--border)',
               borderRadius: '16px', padding: '20px 24px',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -133,8 +141,8 @@ export default function Matches() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexShrink: 0, marginLeft: '20px' }}>
-                <div style={{ textAlign: 'center' }}>
+              <div className="match-card-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px', flexShrink: 0, marginLeft: '20px' }}>
+                <div className="match-score-block" style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'Syne, sans-serif', color: scoreColor(score), lineHeight: 1 }}>
                     {(score * 100).toFixed(0)}%
                   </div>
@@ -144,26 +152,49 @@ export default function Matches() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleInvite(user._id)}
-                  disabled={invited[user._id] || loading[user._id]}
-                  style={{
-                    background: invited[user._id] ? 'rgba(34,211,165,0.1)' : 'var(--accent3)',
-                    color: invited[user._id] ? 'var(--success)' : 'white',
-                    border: invited[user._id] ? '1px solid rgba(34,211,165,0.3)' : 'none',
-                    borderRadius: '10px', padding: '10px 18px',
-                    fontSize: '13px', fontWeight: '600',
-                    cursor: invited[user._id] ? 'default' : 'pointer',
-                    fontFamily: 'Syne, sans-serif', transition: 'all 0.2s',
-                    whiteSpace: 'nowrap'
-                  }}>
-                  {loading[user._id] ? '...' : invited[user._id] ? 'Invited ✓' : 'Invite'}
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setActiveRecipient(user)}
+                    style={{
+                      background: 'rgba(108,99,255,0.12)',
+                      color: 'var(--accent2)',
+                      border: '1px solid rgba(108,99,255,0.3)',
+                      borderRadius: '10px', padding: '10px 14px',
+                      fontSize: '13px', fontWeight: '600',
+                      cursor: 'pointer',
+                      fontFamily: 'Syne, sans-serif', transition: 'all 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}>
+                    💬 Chat
+                  </button>
+                  <button
+                    onClick={() => handleInvite(user._id)}
+                    disabled={invited[user._id] || loading[user._id]}
+                    style={{
+                      background: invited[user._id] ? 'rgba(34,211,165,0.1)' : 'var(--accent3)',
+                      color: invited[user._id] ? 'var(--success)' : 'white',
+                      border: invited[user._id] ? '1px solid rgba(34,211,165,0.3)' : 'none',
+                      borderRadius: '10px', padding: '10px 18px',
+                      fontSize: '13px', fontWeight: '600',
+                      cursor: invited[user._id] ? 'default' : 'pointer',
+                      fontFamily: 'Syne, sans-serif', transition: 'all 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}>
+                    {loading[user._id] ? '...' : invited[user._id] ? 'Invited ✓' : 'Invite'}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <ChatDrawer
+        isOpen={!!activeRecipient}
+        onClose={() => setActiveRecipient(null)}
+        mode="dm"
+        recipient={activeRecipient}
+      />
     </div>
   )
 }

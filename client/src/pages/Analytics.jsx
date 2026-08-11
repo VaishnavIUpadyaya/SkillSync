@@ -3,6 +3,22 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api'
 import Card from '../components/Card'
 
+const Bar = ({ label, value, max, color }) => (
+  <div style={{ marginBottom: '14px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+      <span style={{ fontSize: '13px', color: 'var(--text2)' }}>{label}</span>
+      <span style={{ fontSize: '13px', fontWeight: '600', color }}>{value}</span>
+    </div>
+    <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px' }}>
+      <div style={{
+        height: '100%', borderRadius: '3px',
+        width: max > 0 ? `${(value / max) * 100}%` : '0%',
+        background: color, transition: 'width 0.6s ease'
+      }} />
+    </div>
+  </div>
+)
+
 export default function Analytics() {
   const { id } = useParams()
   const [data, setData] = useState(null)
@@ -23,22 +39,6 @@ export default function Analytics() {
       <div style={{ fontSize: '28px', fontWeight: '800', fontFamily: 'Syne, sans-serif', color: color || 'var(--text)' }}>{value}</div>
       <div style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>{label}</div>
       {sub && <div style={{ fontSize: '12px', color: 'var(--text3)', marginTop: '2px' }}>{sub}</div>}
-    </div>
-  )
-
-  const Bar = ({ label, value, max, color }) => (
-    <div style={{ marginBottom: '14px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-        <span style={{ fontSize: '13px', color: 'var(--text2)' }}>{label}</span>
-        <span style={{ fontSize: '13px', fontWeight: '600', color }}>{value}</span>
-      </div>
-      <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px' }}>
-        <div style={{
-          height: '100%', borderRadius: '3px',
-          width: max > 0 ? `${(value / max) * 100}%` : '0%',
-          background: color, transition: 'width 0.6s ease'
-        }} />
-      </div>
     </div>
   )
 

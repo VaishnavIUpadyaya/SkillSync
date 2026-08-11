@@ -1,114 +1,149 @@
 const express = require('express')
 const router = express.Router()
 const auth = require('../middleware/auth')
-const User = require('mongoose').model('User')
+const mongoose = require('mongoose')
+const User = mongoose.model('User')
+const SkillQuiz = mongoose.model('SkillQuiz')
+const { normalizeSkillName, buildQuizEvaluation } = require('../utils/quizUtils')
 
-// POST /api/verify/challenge — generate a challenge
-router.post('/challenge', auth, async (req, res) => {
-  try {
-    const { skill, proficiency } = req.body
+const QUIZ_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const RETRY_COOLDOWN_MS = 60 * 60 * 1000
 
-    const levelLabel = ['', 'Beginner', 'Familiar', 'Intermediate', 'Advanced', 'Expert'][proficiency] || 'Intermediate'
+async function getOrCreateQuiz(skill, proficiency) {
+  const normalizedSkill = normalizeSkillName(skill)
+  const levelLabel = ['', 'Beginner', 'Familiar', 'Intermediate', 'Advanced', 'Expert'][proficiency] || 'Intermediate'
 
-    const prompt = `You are a technical skill evaluator. Generate a short skill verification challenge for a student who claims to be at ${levelLabel} level in ${skill}.
+  const existingQuiz = await SkillQuiz.findOne({ skill: normalizedSkill, refreshedAt: { $gte: new Date(Date.now() - QUIZ_TTL_MS) } }).lean()
+  if (existingQuiz) return existingQuiz
 
-The challenge must:
-- Be answerable in 3-5 sentences or a short code snippet (max 10 lines)
+  const prompt = `You are a technical skill evaluator. Generate 5 multiple-choice questions for a student who claims to be at ${levelLabel} level in ${skill}.
+
+Each question must:
 - Be specific to ${skill} at ${levelLabel} level
-- Have a clear correct answer you can evaluate
-- Not require running code — just written explanation or pseudocode
+- Have exactly 4 options labeled A-D
+- Include a single correct answer index from 0 to 3
+- Include a short explanation for why the chosen option is correct
 
 Respond in this exact JSON format with no markdown:
 {
-  "question": "the challenge question here",
-  "hint": "a small hint to help them",
-  "expectedTopics": ["topic1", "topic2", "topic3"]
+  "questions": [
+    {
+      "question": "question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctIndex": 0,
+      "explanation": "one sentence explanation"
+    }
+  ]
 }`
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2000, responseMimeType: 'application/json' }
-      })
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 4000, responseMimeType: 'application/json' }
     })
+  })
 
-    const data = await response.json()
+  const data = await response.json()
+  if (!response.ok) {
+    console.error('Gemini API Error:', data)
+    const status = response.status === 401 ? 502 : response.status
+    throw new Error(data.error?.message || 'Error from Gemini API')
+  }
 
-    if (!response.ok) {
-      console.error('Gemini API Error:', data)
-      const status = response.status === 401 ? 502 : response.status
-      return res.status(status).json({ msg: data.error?.message || 'Error from Gemini API' })
-    }
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
+  const clean = text.replace(/```json|```/g, '').trim()
+  let parsed = { questions: [] }
+  try {
+    parsed = JSON.parse(clean)
+  } catch (e) {
+    console.error('Failed to parse quiz JSON from Gemini:', text)
+    throw new Error('AI generated invalid quiz response. Please try again.')
+  }
 
-    const text = data.candidates[0].content.parts[0].text
-    const clean = text.replace(/```json|```/g, '').trim()
-    const parsed = JSON.parse(clean)
-    res.json(parsed)
+  const quizDocument = await SkillQuiz.findOneAndUpdate(
+    { skill: normalizedSkill },
+    {
+      skill: normalizedSkill,
+      questions: parsed.questions || [],
+      refreshedAt: new Date()
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  )
+
+  return quizDocument.toObject()
+}
+
+router.post('/challenge', auth, async (req, res) => {
+  try {
+    const { skill, proficiency } = req.body
+    const quiz = await getOrCreateQuiz(skill, proficiency)
+    const user = await User.findById(req.user.id)
+    const skillEntry = user?.skills?.find((entry) => entry.name?.toLowerCase() === normalizeSkillName(skill))
+    const canRetry = !skillEntry?.verificationCooldownUntil || new Date(skillEntry.verificationCooldownUntil) <= new Date()
+
+    res.json({
+      quiz,
+      canRetry,
+      retryCooldownMs: RETRY_COOLDOWN_MS,
+      skillEntry: skillEntry ? {
+        verified: skillEntry.verified,
+        verificationCooldownUntil: skillEntry.verificationCooldownUntil
+      } : null
+    })
   } catch (err) {
     res.status(500).json({ msg: err.message })
   }
 })
 
-// POST /api/verify/evaluate — evaluate the answer
 router.post('/evaluate', auth, async (req, res) => {
   try {
-    const { skill, proficiency, question, answer, expectedTopics } = req.body
+    const { skill, proficiency, selectedIndexes, quiz } = req.body
+    const normalizedSkill = normalizeSkillName(skill)
 
-    if (!answer || answer.trim().length < 10) {
-      return res.status(400).json({ msg: 'Answer too short' })
+    if (!Array.isArray(selectedIndexes) || selectedIndexes.length !== 5) {
+      return res.status(400).json({ msg: 'Please answer all questions' })
     }
 
-    const levelLabel = ['', 'Beginner', 'Familiar', 'Intermediate', 'Advanced', 'Expert'][proficiency] || 'Intermediate'
+    const user = await User.findById(req.user.id)
+    const skillEntry = user?.skills?.find((entry) => entry.name?.toLowerCase() === normalizedSkill)
+    const now = new Date()
+    const canRetry = !skillEntry?.verificationCooldownUntil || new Date(skillEntry.verificationCooldownUntil) <= now
 
-    const prompt = `You are a technical skill evaluator. A student claims to be at ${levelLabel} level in ${skill}.
-
-Challenge question: ${question}
-
-Expected topics to cover: ${expectedTopics.join(', ')}
-
-Student's answer: ${answer}
-
-Evaluate if this answer demonstrates ${levelLabel} level knowledge of ${skill}.
-
-Respond in this exact JSON format with no markdown:
-{
-  "passed": true or false,
-  "score": a number from 0 to 100,
-  "feedback": "2-3 sentences of specific feedback on their answer",
-  "strongPoints": ["point1", "point2"],
-  "improvements": ["area1", "area2"]
-}`
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2000, responseMimeType: 'application/json' }
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      console.error('Gemini API Error:', data)
-      const status = response.status === 401 ? 502 : response.status
-      return res.status(status).json({ msg: data.error?.message || 'Error from Gemini API' })
+    if (!canRetry) {
+      return res.status(429).json({ msg: 'Please wait before trying again.' })
     }
 
-    const text = data.candidates[0].content.parts[0].text
-    const clean = text.replace(/```json|```/g, '').trim()
-    const result = JSON.parse(clean)
+    const evaluation = buildQuizEvaluation(quiz, selectedIndexes)
+    const result = {
+      passed: evaluation.passed,
+      score: evaluation.score,
+      feedback: evaluation.passed
+        ? 'You answered enough questions correctly to earn a verified badge.'
+        : 'You are close, but a few answers need more review before the skill can be verified.',
+      strongPoints: evaluation.correctCount >= 3 ? ['You understand the core concepts well.', 'Your responses showed solid familiarity with the topic.'] : ['You selected several relevant ideas.', 'You demonstrated effort in the quiz.'],
+      improvements: evaluation.correctCount < 3 ? ['Review the concepts behind the missed questions.', 'Try again after the cooldown to strengthen your understanding.'] : ['Revisit the concepts behind any missed questions.', 'Practice the weaker areas before retrying.'],
+      results: evaluation.results
+    }
 
     if (result.passed) {
       await User.findOneAndUpdate(
-        { _id: req.user.id, 'skills.name': skill },
-        { 
-          $set: { 
+        { _id: req.user.id, 'skills.name': { $regex: new RegExp(`^${normalizedSkill}$`, 'i') } },
+        {
+          $set: {
             'skills.$.verified': true,
-            'skills.$.verifiedAt': new Date()
+            'skills.$.verifiedAt': new Date(),
+            'skills.$.verificationCooldownUntil': null
+          }
+        }
+      )
+    } else {
+      await User.findOneAndUpdate(
+        { _id: req.user.id, 'skills.name': { $regex: new RegExp(`^${normalizedSkill}$`, 'i') } },
+        {
+          $set: {
+            'skills.$.verificationCooldownUntil': new Date(Date.now() + RETRY_COOLDOWN_MS)
           }
         }
       )

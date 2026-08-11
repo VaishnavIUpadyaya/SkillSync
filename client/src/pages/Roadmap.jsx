@@ -28,9 +28,8 @@ export default function Roadmap() {
           if (err.response?.status !== 404) {
             setError(err.response?.data?.msg || 'Failed to load roadmap')
           }
-          // 404 means no roadmap yet — that's fine
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load project')
       } finally {
         setLoading(false)
@@ -40,7 +39,6 @@ export default function Roadmap() {
   }, [id])
 
   const isOwner = project?.owner._id === user?._id
-  const isMember = project?.members.some(m => m._id === user?._id)
 
   const generateRoadmap = async (confirm = false) => {
     if (roadmap && !confirm) {
@@ -60,6 +58,10 @@ export default function Roadmap() {
   }
 
   const toggleTask = async (taskId) => {
+    if (!isOwner) {
+      setError('Only the project leader can mark tasks as completed')
+      return
+    }
     try {
       const res = await api.patch(`/roadmap/${id}/tasks/${taskId}`)
       setRoadmap(res.data)
@@ -105,6 +107,39 @@ export default function Roadmap() {
   const skillColors = ['#6c63ff', '#22d3a5', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899']
   const getSkillColor = (skill) => skillColors[skill?.charCodeAt(0) % skillColors.length] || '#6c63ff'
 
+  const exportMarkdown = () => {
+    if (!roadmap) return
+    let md = `# 📋 ${project.title} — AI Project Roadmap\n\n`
+    md += `**Generated:** ${new Date(roadmap.generatedAt).toLocaleDateString()}\n`
+    if (project.deadline) md += `**Deadline:** ${new Date(project.deadline).toLocaleDateString()}\n`
+    md += `\n---\n\n`
+
+    roadmap.weeks.forEach(w => {
+      md += `## ${w.title}\n`
+      if (w.milestone) md += `*Milestone: ${w.milestone}*\n\n`
+      w.tasks.forEach(t => {
+        const check = t.done ? '[x]' : '[ ]'
+        const assignee = t.assigneeName ? ` (@${t.assigneeName})` : ''
+        const skill = t.skill ? ` \`[${t.skill}]\`` : ''
+        md += `- ${check} **${t.title}**${assignee}${skill}\n`
+        if (t.description) md += `  > ${t.description}\n`
+      })
+      md += `\n`
+    })
+
+    const blob = new Blob([md], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_roadmap.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportPDF = () => {
+    window.print()
+  }
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', color: 'var(--text3)' }}>
       Loading roadmap...
@@ -122,9 +157,9 @@ export default function Roadmap() {
   const deadline = getDeadlineInfo()
 
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
+    <div className="page-container" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
       {/* Header */}
-      <button onClick={() => navigate(`/projects/${id}`)} style={{
+      <button className="no-print" onClick={() => navigate(`/projects/${id}`)} style={{
         background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer',
         fontSize: '14px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0
       }}>← Back to Project</button>
@@ -137,13 +172,39 @@ export default function Roadmap() {
             </h1>
             <p style={{ color: 'var(--text2)', fontSize: '15px' }}>{project.title}</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="no-print" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             {deadline && (
               <span style={{
                 fontSize: '13px', padding: '5px 12px', borderRadius: '20px',
                 background: 'rgba(245,158,11,0.1)', color: deadline.color,
                 border: `1px solid ${deadline.color}40`
               }}>📅 {deadline.label}</span>
+            )}
+            {roadmap && (
+              <>
+                <button
+                  onClick={exportMarkdown}
+                  title="Download Roadmap as Markdown (.md)"
+                  style={{
+                    background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+                    borderRadius: '10px', padding: '10px 16px', fontSize: '13.5px', fontWeight: '600',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >
+                  📥 Export .MD
+                </button>
+                <button
+                  onClick={exportPDF}
+                  title="Print or Save Roadmap as PDF"
+                  style={{
+                    background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+                    borderRadius: '10px', padding: '10px 16px', fontSize: '13.5px', fontWeight: '600',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >
+                  🖨️ Export PDF
+                </button>
+              </>
             )}
             {isOwner && (
               <button
@@ -171,7 +232,6 @@ export default function Roadmap() {
         )}
       </div>
 
-      {/* No roadmap yet */}
       {!roadmap && !generating && (
         <Card>
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -200,7 +260,6 @@ export default function Roadmap() {
         </Card>
       )}
 
-      {/* Generating skeleton */}
       {generating && (
         <Card>
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -218,10 +277,8 @@ export default function Roadmap() {
         </Card>
       )}
 
-      {/* Roadmap content */}
       {roadmap && !generating && (
         <>
-          {/* Overall progress */}
           <Card style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div>
@@ -248,7 +305,6 @@ export default function Roadmap() {
             </p>
           </Card>
 
-          {/* Week cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {roadmap.weeks.map(week => {
               const { total: wTotal, done: wDone } = getWeekStats(week)
@@ -262,7 +318,6 @@ export default function Roadmap() {
                   borderRadius: '16px', overflow: 'hidden',
                   transition: 'border-color 0.3s'
                 }}>
-                  {/* Week header */}
                   <button
                     onClick={() => toggleWeek(week.week)}
                     style={{
@@ -310,7 +365,6 @@ export default function Roadmap() {
                     </div>
                   </button>
 
-                  {/* Tasks */}
                   {!collapsed && (
                     <div style={{ padding: '0 22px 18px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -325,15 +379,16 @@ export default function Roadmap() {
                               transition: 'all 0.25s'
                             }}
                           >
-                            {/* Checkbox */}
                             <button
                               onClick={() => toggleTask(task._id)}
-                              disabled={!isMember && !isOwner}
+                              disabled={!isOwner}
+                              title={isOwner ? 'Click to toggle completion' : 'Only the project leader can mark tasks as completed'}
                               style={{
                                 width: '20px', height: '20px', borderRadius: '6px', flexShrink: 0,
                                 border: `2px solid ${task.done ? 'var(--success)' : 'var(--border)'}`,
                                 background: task.done ? 'var(--success)' : 'transparent',
-                                cursor: (isMember || isOwner) ? 'pointer' : 'default',
+                                cursor: isOwner ? 'pointer' : 'not-allowed',
+                                opacity: isOwner ? 1 : 0.6,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'all 0.2s', marginTop: '1px'
                               }}
@@ -341,7 +396,6 @@ export default function Roadmap() {
                               {task.done && <span style={{ color: 'white', fontSize: '11px', fontWeight: '700' }}>✓</span>}
                             </button>
 
-                            {/* Task content */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{
                                 fontWeight: '600', fontSize: '14px', marginBottom: '3px',
@@ -407,6 +461,11 @@ export default function Roadmap() {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+        @media print {
+          nav, .navbar-pill, .background-auras, .no-print { display: none !important; }
+          body, .page-container { background: #ffffff !important; color: #000000 !important; padding: 0 !important; }
+          * { box-shadow: none !important; }
         }
       `}</style>
     </div>

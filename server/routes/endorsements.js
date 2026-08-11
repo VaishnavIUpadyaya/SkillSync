@@ -3,6 +3,7 @@ const router = express.Router()
 const Endorsement = require('../models/Endorsement')
 const auth = require('../middleware/auth')
 const { createActivity } = require('../utils/activityLogger');
+const { createAndSendNotification } = require('./notifications');
 
 router.post('/', auth, async (req, res) => {
   try {
@@ -13,13 +14,21 @@ router.post('/', auth, async (req, res) => {
     if (existing) return res.status(400).json({ msg: 'Already endorsed this skill' })
     const endorsement = await Endorsement.create({ endorser: req.user.id, endorsee: endorseeId, skill })
     
-    // Log activity
     const count = await Endorsement.countDocuments({ endorsee: endorseeId, skill })
     await createActivity({
       type: 'ENDORSEMENT',
       user: endorseeId,
       skill,
       count
+    })
+
+    createAndSendNotification({
+      recipient: endorseeId,
+      sender: req.user.id,
+      type: 'ENDORSEMENT',
+      title: 'New Skill Endorsement',
+      message: `A peer endorsed your skill: ${skill}`,
+      link: `/users/${endorseeId}`
     })
 
     res.json(endorsement)
