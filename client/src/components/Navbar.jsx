@@ -9,8 +9,6 @@ import NotificationDropdown from './NotificationDropdown'
 import { connectSocket } from '../socket'
 
 
-const MAIN_PAGES = ['/', '/home', '/Home', '/dashboard', '/projects', '/profile']
-
 
 const NAV_ITEMS = [
   { to: '/home',         label: 'Home' },
@@ -184,7 +182,6 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const isAuthPage = ['/login', '/register'].includes(location.pathname)
-  const isMainPage = MAIN_PAGES.includes(location.pathname)
 
   useEffect(() => {
     if (!user) return

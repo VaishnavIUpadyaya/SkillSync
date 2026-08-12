@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api'
@@ -11,7 +11,7 @@ export default function GoogleSignInButton({ redirectTo = '/dashboard' }) {
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-  const handleGoogleToken = async (credential) => {
+  const handleGoogleToken = useCallback(async (credential) => {
     setLoading(true)
     try {
       const res = await api.post('/auth/google', { credential })
@@ -23,7 +23,7 @@ export default function GoogleSignInButton({ redirectTo = '/dashboard' }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [login, navigate, redirectTo])
 
   useEffect(() => {
     if (!clientId) return
@@ -62,7 +62,7 @@ export default function GoogleSignInButton({ redirectTo = '/dashboard' }) {
         document.body.removeChild(script)
       }
     }
-  }, [clientId])
+  }, [clientId, handleGoogleToken])
 
   const handleClickFallback = () => {
     if (!clientId) {
