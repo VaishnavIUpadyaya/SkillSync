@@ -114,7 +114,7 @@ export default function Dashboard() {
     <div
       className="page-container dashboard-shell"
     >
-      <div style={{ position: 'absolute', right: '-100px', top: '-60px', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(79,155,73,0.08), transparent 60%)', filter: 'blur(56px)', pointerEvents: 'none', zIndex: -3 }} />
+      <div style={{ position: 'absolute', right: '0px', top: '-60px', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(79,155,73,0.08), transparent 60%)', filter: 'blur(56px)', pointerEvents: 'none', zIndex: -3 }} />
       <div style={{ position: 'absolute', left: '-40px', bottom: '10px', width: '180px', height: '180px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(138,138,46,0.06), transparent 55%)', filter: 'blur(52px)', pointerEvents: 'none', zIndex: -3 }} />
 
       <div className="dashboard-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '24px' }}>

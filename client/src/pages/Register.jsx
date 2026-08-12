@@ -103,7 +103,7 @@ export default function Register() {
         .rauth-eye {
           position: absolute;
           right: 14px;
-          bottom: 14px;
+          bottom: 42px;
           background: none;
           border: none;
           cursor: pointer;

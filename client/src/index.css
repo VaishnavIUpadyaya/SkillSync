@@ -1806,7 +1806,7 @@ html[data-theme="light"] .reactbits-navbar .mobile-menu-btn span {
   position: fixed;
   top: 18px;
   right: 18px;
-  z-index: 1100;
+  z-index: 9999;
 }
 
 .mobile-floating-btn {
@@ -1846,7 +1846,7 @@ html[data-theme="light"] .mobile-floating-btn {
 .side-drawer-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 10000;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -1859,7 +1859,7 @@ html[data-theme="light"] .mobile-floating-btn {
   height: 100vh;
   width: 290px;
   max-width: 85vw;
-  z-index: 1201;
+  z-index: 10001;
   background: rgba(8, 12, 35, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
